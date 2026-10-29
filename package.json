@@ -1,0 +1,53 @@
+{
+  "name": "basementplays",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Basement Plays theatre group website and CMS",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "build": "cross-env NODE_OPTIONS=\"--no-deprecation --max-old-space-size=8000\" next build",
+    "dev": "cross-env NODE_OPTIONS=--no-deprecation next dev",
+    "devsafe": "rm -rf .next && cross-env NODE_OPTIONS=--no-deprecation next dev",
+    "generate:importmap": "cross-env NODE_OPTIONS=--no-deprecation payload generate:importmap",
+    "generate:types": "cross-env NODE_OPTIONS=--no-deprecation payload generate:types",
+    "lint": "cross-env NODE_OPTIONS=--no-deprecation eslint .",
+    "payload": "cross-env NODE_OPTIONS=--no-deprecation payload",
+    "seed": "npm run seed:admin && npm run seed:dear-daughter",
+    "seed:admin": "cross-env PAYLOAD_SKIP_DB_PUSH=true NODE_OPTIONS=--no-deprecation tsx scripts/seed-admin.ts",
+    "seed:dear-daughter": "cross-env PAYLOAD_SKIP_DB_PUSH=true NODE_OPTIONS=--no-deprecation tsx scripts/seed-dear-daughter.ts",
+    "seed:demo": "cross-env PAYLOAD_SKIP_DB_PUSH=true NODE_OPTIONS=--no-deprecation tsx scripts/seed-demo.ts",
+    "start": "cross-env NODE_OPTIONS=--no-deprecation next start"
+  },
+  "dependencies": {
+    "@payloadcms/db-sqlite": "3.92.1",
+    "@payloadcms/next": "3.92.1",
+    "@payloadcms/richtext-lexical": "3.92.1",
+    "@payloadcms/ui": "3.92.1",
+    "cross-env": "^7.0.3",
+    "dotenv": "16.4.7",
+    "framer-motion": "14.8.0",
+    "graphql": "^16.8.1",
+    "next": "16.3.3",
+    "payload": "3.92.1",
+    "react": "19.2.6",
+    "react-dom": "19.2.6",
+    "sharp": "0.35.4",
+    "yet-another-react-lightbox": "3.32.2"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "4.3.3",
+    "@types/node": "22.19.9",
+    "@types/react": "19.2.14",
+    "@types/react-dom": "19.2.3",
+    "eslint": "^9.16.0",
+    "eslint-config-next": "16.3.3",
+    "postcss": "^8.5.6",
+    "tailwindcss": "4.3.3",
+    "tsx": "4.23.15",
+    "typescript": "5.7.3"
+  },
+  "engines": {
+    "node": "^22.23.4 || >=24.22.1"
+  }
+}
