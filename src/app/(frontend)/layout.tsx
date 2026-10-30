@@ -2,8 +2,10 @@ import type { Metadata } from 'next'
 import { Cormorant, Inter, Playfair_Display } from 'next/font/google'
 import type { ReactNode } from 'react'
 
+import { FooterGate } from '@/components/FooterGate'
 import { SiteFooter } from '@/components/SiteFooter'
 import { SiteHeader } from '@/components/SiteHeader'
+import { getSiteSettings } from '@/lib/payload'
 
 import './globals.css'
 
@@ -26,12 +28,17 @@ const inter = Inter({
   display: 'swap',
 })
 
-export const metadata: Metadata = {
-  description: 'Independent theatre from Basement Plays.',
-  title: {
-    default: 'Basement Plays',
-    template: '%s | Basement Plays',
-  },
+export async function generateMetadata(): Promise<Metadata> {
+  const settings = await getSiteSettings()
+  const groupName = settings.groupName || 'Basement Plays'
+
+  return {
+    description: settings.tagline ?? 'Independent theatre from Basement Plays.',
+    title: {
+      default: groupName,
+      template: `%s | ${groupName}`,
+    },
+  }
 }
 
 export default function FrontendLayout({ children }: { children: ReactNode }) {
@@ -43,7 +50,9 @@ export default function FrontendLayout({ children }: { children: ReactNode }) {
       <body className="min-h-screen bg-[var(--bg)] text-[var(--text)] antialiased">
         <SiteHeader />
         <main id="main">{children}</main>
-        <SiteFooter />
+        <FooterGate>
+          <SiteFooter />
+        </FooterGate>
       </body>
     </html>
   )

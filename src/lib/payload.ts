@@ -1,7 +1,7 @@
 import config from '@payload-config'
 import { getPayload } from 'payload'
 
-import type { Production, Run } from '@/payload-types'
+import type { Production, Run, SiteSetting } from '@/payload-types'
 
 export async function getAllProductions(): Promise<Production[]> {
   const payload = await getPayload({ config })
@@ -54,4 +54,14 @@ export async function getRunsForProduction(
   })
 
   return result.docs
+}
+
+export async function getSiteSettings(): Promise<SiteSetting> {
+  const payload = await getPayload({ config })
+
+  return payload.findGlobal({
+    slug: 'site-settings',
+    depth: 2,
+    overrideAccess: false,
+  })
 }

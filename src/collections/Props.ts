@@ -5,7 +5,7 @@ import { isStaff } from './access'
 export const Props: CollectionConfig = {
   slug: 'props',
   admin: {
-    group: 'Backstage',
+    group: 'Production',
     useAsTitle: 'name',
     defaultColumns: ['name', 'status', 'production', 'assignedTo'],
   },

@@ -29,7 +29,6 @@ type RunSeed = {
 }
 
 type ProductionSeed = {
-  backstage: (PlaceholderImage & { caption: string })[]
   cast: { name: string; role: string }[]
   crew: { name: string; role: string }[]
   gallery: PlaceholderImage[]
@@ -149,47 +148,6 @@ const productions: ProductionSeed[] = [
         motif: 'stage',
         subtitle: 'Act III, scene ii',
         title: 'THE LAST|TOAST',
-      },
-    ],
-    backstage: [
-      {
-        accent: '#c9a227',
-        alt: 'Backstage at The Hollow Crown: a crown prop and costume rack',
-        background: '#1a1110',
-        caption: 'The crown prop gets its final fitting before opening night.',
-        eyebrow: 'Behind the scenes',
-        foreground: '#f1e3d2',
-        key: 'hollow-crown-backstage-1',
-        kind: 'backstage',
-        motif: 'candid',
-        subtitle: 'Backstage — costume fitting',
-        title: 'CROWN|PROP',
-      },
-      {
-        accent: '#c9a227',
-        alt: 'Backstage at The Hollow Crown: the banquet table under construction',
-        background: '#17100e',
-        caption: 'Building the banquet table out of reclaimed timber.',
-        eyebrow: 'Behind the scenes',
-        foreground: '#f1e3d2',
-        key: 'hollow-crown-backstage-2',
-        kind: 'backstage',
-        motif: 'candid',
-        subtitle: 'Backstage — set build',
-        title: 'SET|BUILD',
-      },
-      {
-        accent: '#c9a227',
-        alt: 'Backstage at The Hollow Crown: a stage manager calling cues',
-        background: '#1c1210',
-        caption: 'The stage manager calls the final cue before the dress rehearsal.',
-        eyebrow: 'Behind the scenes',
-        foreground: '#f1e3d2',
-        key: 'hollow-crown-backstage-3',
-        kind: 'backstage',
-        motif: 'candid',
-        subtitle: 'Backstage — cue call',
-        title: 'CUE|CALL',
       },
     ],
     runs: [
@@ -321,50 +279,6 @@ const productions: ProductionSeed[] = [
         title: 'HARVEST|FAIR',
       },
     ],
-    backstage: [
-      {
-        accent: '#b5522c',
-        alt: 'Backstage at The Sunshine Committee: the prop table with lemon bars',
-        background: '#3a2417',
-        caption:
-          'Lemon bars, fake prize ribbons, and one very real tray of snacks.',
-        eyebrow: 'Behind the scenes',
-        foreground: '#ffe9bd',
-        key: 'sunshine-committee-backstage-1',
-        kind: 'backstage',
-        motif: 'candid',
-        subtitle: 'Backstage — prop table',
-        title: 'PROP|TABLE',
-      },
-      {
-        accent: '#b5522c',
-        alt: 'Backstage at The Sunshine Committee: the quick-change corner',
-        background: '#42291a',
-        caption:
-          'The quick-change corner, held together with velcro and hope.',
-        eyebrow: 'Behind the scenes',
-        foreground: '#ffe9bd',
-        key: 'sunshine-committee-backstage-2',
-        kind: 'backstage',
-        motif: 'candid',
-        subtitle: 'Backstage — quick change',
-        title: 'COSTUME|SWAP',
-      },
-      {
-        accent: '#b5522c',
-        alt: 'Backstage at The Sunshine Committee: painting the gazebo set',
-        background: '#372216',
-        caption:
-          'Painting the gazebo the exact shade of municipal optimism.',
-        eyebrow: 'Behind the scenes',
-        foreground: '#ffe9bd',
-        key: 'sunshine-committee-backstage-3',
-        kind: 'backstage',
-        motif: 'candid',
-        subtitle: 'Backstage — set paint',
-        title: 'SET|PAINT',
-      },
-    ],
     runs: [
       {
         label: '2026 Season',
@@ -444,19 +358,12 @@ async function seedProduction(
 
     const poster = await uploadImage(payload, seed.poster)
     const hero = await uploadImage(payload, seed.hero)
-    const gallery: number[] = []
+    const gallery: { caption?: string; image: number }[] = []
 
     for (const image of seed.gallery) {
       const media = await uploadImage(payload, image)
-      gallery.push(media.id)
-    }
-
-    const backstage: { caption: string; image: number }[] = []
-
-    for (const image of seed.backstage) {
-      const media = await uploadImage(payload, image)
-      backstage.push({
-        caption: image.caption,
+      gallery.push({
+        caption: image.subtitle,
         image: media.id,
       })
     }
@@ -464,7 +371,6 @@ async function seedProduction(
     production = await payload.create({
       collection: 'productions',
       data: {
-        backstage,
         cast: seed.cast,
         crew: seed.crew,
         gallery,

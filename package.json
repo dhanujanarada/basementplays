@@ -13,8 +13,9 @@
     "generate:types": "cross-env NODE_OPTIONS=--no-deprecation payload generate:types",
     "lint": "cross-env NODE_OPTIONS=--no-deprecation eslint .",
     "payload": "cross-env NODE_OPTIONS=--no-deprecation payload",
-    "seed": "npm run seed:admin && npm run seed:dear-daughter",
+    "seed": "npm run seed:admin && npm run seed:site-settings && npm run seed:dear-daughter",
     "seed:admin": "cross-env PAYLOAD_SKIP_DB_PUSH=true NODE_OPTIONS=--no-deprecation tsx scripts/seed-admin.ts",
+    "seed:site-settings": "cross-env PAYLOAD_SKIP_DB_PUSH=true NODE_OPTIONS=--no-deprecation tsx scripts/seed-site-settings.ts",
     "seed:dear-daughter": "cross-env PAYLOAD_SKIP_DB_PUSH=true NODE_OPTIONS=--no-deprecation tsx scripts/seed-dear-daughter.ts",
     "seed:demo": "cross-env PAYLOAD_SKIP_DB_PUSH=true NODE_OPTIONS=--no-deprecation tsx scripts/seed-demo.ts",
     "start": "cross-env NODE_OPTIONS=--no-deprecation next start"

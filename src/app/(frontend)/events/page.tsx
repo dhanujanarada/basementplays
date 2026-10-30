@@ -1,7 +1,11 @@
 import { EventCard } from '@/components/EventCard'
 import { Container } from '@/components/ui/Container'
 import type { Production } from '@/payload-types'
-import { getAllProductions, getRunsForProduction } from '@/lib/payload'
+import {
+  getAllProductions,
+  getRunsForProduction,
+  getSiteSettings,
+} from '@/lib/payload'
 import { getUpcomingShow } from '@/lib/shows'
 import type { ShowEntry } from '@/lib/types'
 
@@ -17,7 +21,10 @@ type ProductionListing = {
 }
 
 export default async function EventsPage() {
-  const productions = await getAllProductions()
+  const [productions, settings] = await Promise.all([
+    getAllProductions(),
+    getSiteSettings(),
+  ])
   const listings: ProductionListing[] = await Promise.all(
     productions.map(async (production) => {
       const runs = await getRunsForProduction(production.id)
@@ -48,6 +55,8 @@ export default async function EventsPage() {
     return a.production.title.localeCompare(b.production.title)
   })
 
+  const groupName = settings.groupName || 'Basement Plays'
+
   return (
     <Container className="py-16 sm:py-24">
       <p className="text-xs font-medium uppercase tracking-[0.22em] text-[var(--accent)]">
@@ -59,7 +68,7 @@ export default async function EventsPage() {
             Events
           </h1>
           <p className="mt-5 max-w-xl text-base leading-7 text-[var(--muted)]">
-            Productions from Basement Plays, with upcoming show dates and ticket
+            Productions from {groupName}, with upcoming show dates and ticket
             links.
           </p>
         </div>
@@ -74,6 +83,7 @@ export default async function EventsPage() {
         <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {listings.map(({ nextShow, production }) => (
             <EventCard
+              groupName={groupName}
               key={production.id}
               nextShow={nextShow}
               production={production}

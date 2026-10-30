@@ -1,0 +1,1189 @@
+/*
+ * Dear Daughter — production design.
+ *
+ * Self-contained: the palette, fonts, textures, and layout for this production
+ * live here and in DearDaughterDesign.tsx. Nothing in the CMS decides how the
+ * page looks.
+ *
+ * Palette: stage green (#4f7a56), deep green (#3d6247), warm paper (#f1ead9),
+ * terracotta (#9a4b38), and wood (#a8794a). Fonts: Caveat Brush for display,
+ * Quicksand for body copy. Texture files are optional; every use has a CSS
+ * fallback so the design still works when the files are missing.
+ */
+
+.dd-page {
+  /* Palette */
+  --bg: #4f7a56;
+  --bg-deep: #3d6247;
+  --paper: #f1ead9;
+  --paper-deep: #e7dcc5;
+  --accent: #9a4b38;
+  --accent-deep: #7c392a;
+  --wood: #a8794a;
+  --gold: #d9b483;
+  --ink: #241f19;
+  --ink-soft: #5c5142;
+  --line: rgb(60 50 38 / 18%);
+  --line-strong: rgb(60 50 38 / 34%);
+  --shadow: rgb(36 31 25 / 28%);
+
+  /* Footer is themed by the production, not the global layout. */
+  --footer-bg: var(--wood);
+  --footer-text: var(--paper);
+  --footer-accent: var(--paper);
+
+  /* Aliases so shared UI (Button, Gallery) inherits the production palette. */
+  --text: var(--ink);
+  --surface: var(--paper);
+  --surface-raised: var(--paper-deep);
+  --muted: var(--ink-soft);
+  --border: var(--line);
+
+  --dd-font-display: var(--font-dd-display), 'Segoe Print', 'Bradley Hand',
+    cursive;
+  --dd-font-body: var(--font-dd-body), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--dd-font-display);
+  --font-body: var(--dd-font-body);
+
+  --dd-torn-h: clamp(16px, 3vw, 30px);
+
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--dd-font-body);
+  font-size: 1rem;
+  line-height: 1.65;
+  overflow-x: clip;
+}
+
+.dd-page a:focus-visible,
+.dd-page button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+/* ------------------------------------------------------------------ */
+/* Hero                                                               */
+/* ------------------------------------------------------------------ */
+
+.dd-hero {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  padding: clamp(1.75rem, 4vw, 2.75rem) 0 clamp(2rem, 5vw, 3.5rem);
+  background: var(--bg-deep);
+  color: var(--paper);
+}
+
+.dd-hero__photo {
+  object-fit: cover;
+  object-position: center;
+  opacity: 0.35;
+  filter: saturate(0.75) contrast(1.05);
+}
+
+.dd-wallpaper {
+  position: absolute;
+  inset: 0;
+  background-color: var(--bg-deep);
+  background-image:
+    url('/textures/damask.png'),
+    radial-gradient(
+      circle at 18% 18%,
+      color-mix(in srgb, var(--paper) 9%, transparent),
+      transparent 42%
+    ),
+    radial-gradient(
+      circle at 82% 0%,
+      color-mix(in srgb, var(--gold) 12%, transparent),
+      transparent 46%
+    ),
+    repeating-linear-gradient(
+      45deg,
+      color-mix(in srgb, var(--paper) 3.5%, transparent) 0 2px,
+      transparent 2px 16px
+    );
+  background-position: center;
+  background-size: 360px auto, cover, cover, auto;
+  opacity: 0.75;
+  pointer-events: none;
+}
+
+.dd-hero__veil {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(
+      100deg,
+      color-mix(in srgb, var(--bg-deep) 94%, transparent) 0%,
+      color-mix(in srgb, var(--bg-deep) 74%, transparent) 54%,
+      color-mix(in srgb, var(--bg-deep) 40%, transparent) 100%
+    ),
+    linear-gradient(
+      to top,
+      var(--bg-deep) 0%,
+      color-mix(in srgb, var(--bg-deep) 22%, transparent) 42%,
+      transparent 100%
+    );
+  pointer-events: none;
+}
+
+.dd-hero__seal {
+  position: absolute;
+  top: clamp(1.25rem, 4vw, 2.75rem);
+  right: clamp(1.25rem, 4vw, 3.5rem);
+  width: clamp(4rem, 8vw, 6rem);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  border: 1px solid color-mix(in srgb, var(--paper) 42%, transparent);
+  box-shadow:
+    inset 0 0 0 4px transparent,
+    inset 0 0 0 5px color-mix(in srgb, var(--paper) 24%, transparent);
+  opacity: 0.75;
+  pointer-events: none;
+}
+
+.dd-hero__seal::after {
+  content: '';
+  position: absolute;
+  inset: 50% auto auto 50%;
+  width: 34%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--accent) 82%, transparent);
+  transform: translate(-50%, -50%);
+}
+
+.dd-hero__inner {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: clamp(2.5rem, 6vw, 4.5rem);
+  align-items: center;
+}
+
+.dd-hero__copy {
+  max-width: 40rem;
+  animation: dd-fade-up 700ms ease both;
+}
+
+.dd-back-link {
+  display: inline-block;
+  margin-bottom: clamp(1.5rem, 3vw, 2.25rem);
+  font-family: var(--dd-font-body);
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--paper) 68%, transparent);
+  transition: color 200ms ease;
+}
+
+.dd-back-link:hover {
+  color: var(--gold);
+}
+
+.dd-eyebrow {
+  margin: 0;
+  font-family: var(--dd-font-body);
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.dd-hero .dd-eyebrow {
+  color: var(--gold);
+}
+
+.dd-title {
+  margin: 0.4rem 0 0;
+  font-family: var(--dd-font-display);
+  font-size: clamp(3.6rem, 12vw, 8.5rem);
+  font-weight: 400;
+  line-height: 0.86;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+  color: var(--paper);
+}
+
+.dd-tagline {
+  max-width: 34rem;
+  margin: clamp(1.1rem, 3vw, 1.6rem) 0 0;
+  font-family: var(--dd-font-body);
+  font-size: clamp(1.02rem, 2vw, 1.2rem);
+  line-height: 1.6;
+  color: color-mix(in srgb, var(--paper) 84%, transparent);
+}
+
+.dd-credits {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem clamp(1.5rem, 4vw, 2.75rem);
+  margin: clamp(1.5rem, 3vw, 2rem) 0 0;
+  padding-top: clamp(1.25rem, 3vw, 1.75rem);
+  border-top: 1px solid color-mix(in srgb, var(--paper) 22%, transparent);
+}
+
+.dd-credits dt {
+  margin: 0 0 0.3rem;
+  font-family: var(--dd-font-body);
+  font-size: 0.58rem;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--paper) 58%, transparent);
+}
+
+.dd-credits dd {
+  margin: 0;
+  font-family: var(--dd-font-display);
+  font-size: 1.35rem;
+  line-height: 1.1;
+  color: var(--paper);
+}
+
+.dd-hero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1.25rem 1.75rem;
+  margin-top: clamp(1.75rem, 4vw, 2.5rem);
+}
+
+.dd-page .dd-cta,
+.dd-page .dd-ticket-button {
+  font-family: var(--dd-font-body);
+  border-radius: 2px;
+}
+
+.dd-page .dd-cta {
+  padding: 0.9rem 1.5rem;
+  background: var(--accent);
+  color: var(--paper);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  box-shadow: 0 10px 22px -14px var(--shadow);
+  transition:
+    background-color 200ms ease,
+    transform 200ms ease;
+}
+
+.dd-page .dd-cta:hover {
+  background: var(--accent-deep);
+  transform: translateY(-1px);
+}
+
+.dd-page .dd-cta--small {
+  padding: 0.65rem 1.1rem;
+  font-size: 0.64rem;
+}
+
+.dd-text-link {
+  font-family: var(--dd-font-body);
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--paper);
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--paper) 40%, transparent);
+  text-underline-offset: 0.4em;
+  transition:
+    color 200ms ease,
+    text-decoration-color 200ms ease;
+}
+
+.dd-text-link:hover {
+  color: var(--gold);
+  text-decoration-color: var(--gold);
+}
+
+.dd-hero__next {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  margin: clamp(1.5rem, 3vw, 2rem) 0 0;
+  font-family: var(--dd-font-body);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--paper) 72%, transparent);
+}
+
+.dd-hero__next span {
+  width: 0.4rem;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: var(--gold);
+}
+
+.dd-poster-wrap {
+  width: min(100%, 22rem);
+  justify-self: center;
+  margin: 0;
+  animation: dd-fade-up 900ms 120ms ease both;
+}
+
+.dd-poster {
+  position: relative;
+  aspect-ratio: 2 / 3;
+  border: 10px solid var(--paper);
+  background: var(--bg-deep);
+  box-shadow: 0 30px 55px -28px var(--shadow);
+  transform: rotate(-1.5deg);
+}
+
+.dd-poster img {
+  object-fit: cover;
+}
+
+.dd-poster__fallback {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+  padding: 1.5rem;
+  color: var(--paper);
+}
+
+.dd-poster__fallback span {
+  font-family: var(--dd-font-body);
+  font-size: 0.6rem;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+
+.dd-poster__fallback strong {
+  font-family: var(--dd-font-display);
+  font-size: clamp(2rem, 5vw, 2.75rem);
+  font-weight: 400;
+  line-height: 0.95;
+}
+
+.dd-poster__caption {
+  margin: 1.5rem 0 0;
+  font-family: var(--dd-font-body);
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  text-align: center;
+  color: color-mix(in srgb, var(--paper) 62%, transparent);
+}
+
+/* Partner strip ------------------------------------------------------ */
+
+.dd-partner-strip {
+  position: relative;
+  z-index: 1;
+  margin-top: clamp(2.5rem, 6vw, 4rem);
+  padding-top: clamp(1.25rem, 3vw, 1.75rem);
+  border-top: 1px solid color-mix(in srgb, var(--paper) 20%, transparent);
+}
+
+.dd-partner-strip__label {
+  margin: 0 0 0.9rem;
+  font-family: var(--dd-font-body);
+  font-size: 0.58rem;
+  font-weight: 600;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--paper) 58%, transparent);
+}
+
+.dd-partner-strip__list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.9rem clamp(1.5rem, 4vw, 2.75rem);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.dd-partner-strip__item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.dd-partner-strip__logo {
+  width: auto;
+  max-width: 7rem;
+  height: 2.1rem;
+  object-fit: contain;
+  filter: brightness(0) invert(1);
+  opacity: 0.85;
+}
+
+.dd-partner-strip__name {
+  font-family: var(--dd-font-display);
+  font-size: 1.35rem;
+  line-height: 1;
+  color: var(--paper);
+}
+
+.dd-partner-strip__role {
+  font-family: var(--dd-font-body);
+  font-size: 0.55rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--paper) 55%, transparent);
+}
+
+/* ------------------------------------------------------------------ */
+/* Shared section furniture                                           */
+/* ------------------------------------------------------------------ */
+
+.dd-season,
+.dd-synopsis,
+.dd-company,
+.dd-gallery {
+  padding: clamp(3.5rem, 8vw, 6.5rem) 0;
+}
+
+.dd-section-intro {
+  max-width: 46rem;
+  margin-bottom: clamp(2rem, 5vw, 3rem);
+}
+
+.dd-section-intro--center {
+  margin-inline: auto;
+  text-align: center;
+}
+
+.dd-section-title {
+  margin: 0.35rem 0 0.6rem;
+  font-family: var(--dd-font-display);
+  font-size: clamp(2.6rem, 6vw, 4.4rem);
+  font-weight: 400;
+  line-height: 0.95;
+  letter-spacing: 0;
+  text-wrap: balance;
+}
+
+.dd-section-note {
+  margin: 0;
+  max-width: 36rem;
+  font-family: var(--dd-font-body);
+  font-size: 1rem;
+  color: var(--ink-soft);
+}
+
+.dd-section-intro--center .dd-section-note {
+  margin-inline: auto;
+}
+
+.dd-empty {
+  margin: 0;
+  padding: 1.5rem 0;
+  font-style: italic;
+  color: var(--ink-soft);
+}
+
+/* ------------------------------------------------------------------ */
+/* Cream season section, torn edge, show dates, booking               */
+/* ------------------------------------------------------------------ */
+
+.dd-season {
+  position: relative;
+  background: var(--paper);
+  scroll-margin-top: 6rem;
+}
+
+.dd-torn {
+  position: absolute;
+  right: 0;
+  bottom: 100%;
+  left: 0;
+  height: var(--dd-torn-h);
+  background-color: transparent;
+  background-image:
+    url('/textures/torn-edge.png'),
+    radial-gradient(
+      circle at 50% 100%,
+      var(--paper) 66%,
+      transparent 68%
+    );
+  background-repeat: repeat-x, repeat-x;
+  background-position: center bottom, center bottom;
+  background-size: auto 100%, 30px var(--dd-torn-h);
+  pointer-events: none;
+}
+
+.dd-season__inner {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: clamp(2.5rem, 5vw, 4rem);
+  align-items: start;
+}
+
+.dd-runs {
+  display: grid;
+  gap: clamp(2rem, 4vw, 3rem);
+}
+
+.dd-run {
+  border-top: 1px solid var(--line-strong);
+  padding-top: 1.5rem;
+}
+
+.dd-run__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.35rem 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.dd-run__head h3 {
+  margin: 0;
+  font-family: var(--dd-font-body);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.dd-run__head p {
+  margin: 0;
+  font-family: var(--dd-font-body);
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  color: var(--ink-soft);
+}
+
+.dd-shows {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.dd-show {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.9rem 1.25rem;
+  align-items: center;
+  padding: 1.2rem 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.dd-show__date {
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  min-width: 4.25rem;
+  padding-right: 1.1rem;
+  border-right: 1px solid var(--line-strong);
+  line-height: 1;
+}
+
+.dd-show__weekday {
+  font-family: var(--dd-font-body);
+  font-size: 0.56rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.dd-show__day {
+  margin: 0.2rem 0;
+  font-family: var(--dd-font-display);
+  font-size: 2.4rem;
+  line-height: 0.9;
+}
+
+.dd-show__month {
+  font-family: var(--dd-font-body);
+  font-size: 0.56rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.dd-show__time {
+  margin: 0;
+  font-family: var(--dd-font-display);
+  font-size: 1.7rem;
+  line-height: 1;
+}
+
+.dd-show__price {
+  margin: 0.25rem 0 0;
+  font-family: var(--dd-font-body);
+  font-size: 0.64rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.dd-show__action {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  grid-column: 1 / -1;
+}
+
+.dd-status {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.32rem 0.65rem;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  font-family: var(--dd-font-body);
+  font-size: 0.54rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--ink-soft);
+}
+
+.dd-status--open {
+  color: var(--bg-deep);
+}
+
+.dd-status--few-left {
+  color: var(--accent);
+}
+
+.dd-status--cancelled {
+  text-decoration: line-through;
+}
+
+.dd-page .dd-ticket-button {
+  padding: 0.5rem 0.95rem;
+  border: 1px solid var(--ink);
+  background: transparent;
+  color: var(--ink);
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  transition:
+    background-color 200ms ease,
+    color 200ms ease;
+}
+
+.dd-page .dd-ticket-button:hover {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.dd-show--sold-out,
+.dd-show--cancelled {
+  opacity: 0.62;
+}
+
+/* Booking block ------------------------------------------------------ */
+
+.dd-booking {
+  padding: clamp(1.35rem, 3vw, 1.9rem);
+  border: 1px solid var(--line-strong);
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--paper) 65%, var(--paper-deep)),
+      var(--paper)
+    );
+  box-shadow: 0 24px 44px -38px var(--shadow);
+}
+
+.dd-booking__title {
+  margin: 0.35rem 0 1.25rem;
+  font-family: var(--dd-font-display);
+  font-size: clamp(2.1rem, 4.5vw, 2.8rem);
+  font-weight: 400;
+  line-height: 0.95;
+}
+
+.dd-booking__meta {
+  display: grid;
+  gap: 0.85rem;
+  margin: 0 0 1.35rem;
+  padding-top: 1.1rem;
+  border-top: 1px solid var(--line);
+}
+
+.dd-booking__meta dt {
+  font-family: var(--dd-font-body);
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.dd-booking__meta dd {
+  margin: 0.1rem 0 0;
+  font-family: var(--dd-font-display);
+  font-size: 1.4rem;
+  line-height: 1.1;
+}
+
+.dd-booking__button {
+  width: 100%;
+}
+
+.dd-booking__note {
+  margin: 0.9rem 0 0;
+  font-family: var(--dd-font-body);
+  font-size: 0.68rem;
+  line-height: 1.6;
+  color: var(--ink-soft);
+}
+
+/* ------------------------------------------------------------------ */
+/* Wood divider                                                       */
+/* ------------------------------------------------------------------ */
+
+.dd-wood-divider {
+  height: clamp(12px, 2vw, 18px);
+  background-color: var(--wood);
+  background-image:
+    repeating-linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--ink) 12%, transparent) 0 2px,
+      transparent 2px 9px
+    ),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--paper) 26%, transparent),
+      transparent 42%,
+      color-mix(in srgb, var(--ink) 18%, transparent)
+    );
+  box-shadow:
+    inset 0 1px color-mix(in srgb, var(--paper) 35%, transparent),
+    inset 0 -1px color-mix(in srgb, var(--ink) 25%, transparent);
+}
+
+/* ------------------------------------------------------------------ */
+/* Synopsis                                                           */
+/* ------------------------------------------------------------------ */
+
+.dd-synopsis {
+  background: var(--bg-deep);
+  color: var(--paper);
+}
+
+.dd-synopsis .dd-eyebrow {
+  color: var(--gold);
+}
+
+.dd-synopsis .dd-section-title {
+  color: var(--paper);
+}
+
+.dd-synopsis__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: clamp(1.75rem, 5vw, 4rem);
+}
+
+.dd-sprig {
+  display: block;
+  width: 5rem;
+  height: 1px;
+  margin-top: 1.5rem;
+  background: var(--gold);
+  opacity: 0.7;
+}
+
+.dd-sprig::after {
+  content: '';
+  display: block;
+  width: 0.4rem;
+  aspect-ratio: 1;
+  margin-top: -0.2rem;
+  background: var(--gold);
+  transform: rotate(45deg);
+}
+
+.dd-richtext {
+  font-family: var(--dd-font-body);
+  font-size: clamp(1.02rem, 1.8vw, 1.15rem);
+  line-height: 1.8;
+  color: color-mix(in srgb, var(--paper) 92%, transparent);
+}
+
+.dd-richtext p {
+  margin: 0 0 1.1em;
+}
+
+.dd-richtext p:last-child {
+  margin-bottom: 0;
+}
+
+.dd-richtext p:first-of-type::first-letter {
+  float: left;
+  margin: 0.12em 0.12em 0 0;
+  font-family: var(--dd-font-display);
+  font-size: 3.2em;
+  line-height: 0.72;
+  color: var(--gold);
+}
+
+.dd-richtext a {
+  color: var(--gold);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.dd-richtext strong {
+  font-weight: 700;
+}
+
+.dd-richtext em {
+  font-style: italic;
+}
+
+.dd-richtext blockquote {
+  margin: 1.5em 0;
+  padding-left: 1.25rem;
+  border-left: 2px solid var(--gold);
+  font-style: italic;
+  color: color-mix(in srgb, var(--paper) 78%, transparent);
+}
+
+/* ------------------------------------------------------------------ */
+/* Cast & crew                                                        */
+/* ------------------------------------------------------------------ */
+
+.dd-company {
+  background: var(--paper);
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.dd-company__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: clamp(2rem, 5vw, 3.5rem);
+}
+
+.dd-company__column h3 {
+  margin: 0 0 0.5rem;
+  padding-bottom: 0.7rem;
+  border-bottom: 1px solid var(--line-strong);
+  font-family: var(--dd-font-body);
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.dd-company__list {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0 2rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.dd-person {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 0.85rem 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.dd-person__portrait {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 3rem;
+  aspect-ratio: 1;
+  overflow: hidden;
+  border-radius: 50%;
+  background: var(--bg);
+  color: var(--paper);
+  font-family: var(--dd-font-body);
+  font-size: 0.76rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+}
+
+.dd-person__portrait img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.dd-person__name {
+  margin: 0;
+  font-family: var(--dd-font-display);
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.dd-person__role {
+  margin: 0.2rem 0 0;
+  font-family: var(--dd-font-body);
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+/* ------------------------------------------------------------------ */
+/* Gallery                                                            */
+/* ------------------------------------------------------------------ */
+
+.dd-gallery {
+  /* Aliases for the shared Gallery component's Tailwind utilities. */
+  --bg: var(--bg-deep);
+  --text: var(--paper);
+  --accent: var(--gold);
+  --surface: var(--bg-deep);
+  --surface-raised: var(--paper-deep);
+  --muted: color-mix(in srgb, var(--paper) 72%, transparent);
+  --border: color-mix(in srgb, var(--paper) 30%, transparent);
+
+  background: var(--bg-deep);
+  color: var(--paper);
+}
+
+.dd-gallery .dd-eyebrow {
+  color: var(--gold);
+}
+
+.dd-gallery .dd-section-title {
+  color: var(--paper);
+}
+
+.dd-gallery .dd-section-note {
+  color: color-mix(in srgb, var(--paper) 72%, transparent);
+}
+
+.dd-gallery__head {
+  max-width: 40rem;
+}
+
+/* ------------------------------------------------------------------ */
+/* Outro                                                              */
+/* ------------------------------------------------------------------ */
+
+.dd-outro {
+  padding: clamp(3rem, 7vw, 5rem) 0;
+  background: var(--accent);
+  color: var(--paper);
+}
+
+.dd-outro .dd-eyebrow {
+  color: var(--gold);
+}
+
+.dd-outro__inner {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1.5rem;
+}
+
+.dd-outro__title {
+  margin: 0.4rem 0 0;
+  font-family: var(--dd-font-display);
+  font-size: clamp(2.4rem, 5vw, 3.4rem);
+  line-height: 0.95;
+}
+
+.dd-page .dd-cta--light {
+  background: var(--paper);
+  color: var(--accent-deep);
+}
+
+.dd-page .dd-cta--light:hover {
+  background: var(--gold);
+  color: var(--accent-deep);
+}
+
+.dd-outro a:focus-visible {
+  outline-color: var(--gold);
+}
+
+/* ------------------------------------------------------------------ */
+/* Mobile sticky Reserve bar                                          */
+/* ------------------------------------------------------------------ */
+
+.dd-sticky-bar {
+  display: none;
+}
+
+@media (max-width: 719px) {
+  .dd-page--has-bar > footer {
+    padding-bottom: calc(4.25rem + env(safe-area-inset-bottom));
+  }
+
+  .dd-sticky-bar {
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 40;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.7rem 1rem calc(0.7rem + env(safe-area-inset-bottom));
+    border-top: 1px solid color-mix(in srgb, var(--paper) 22%, transparent);
+    background: var(--bg-deep);
+    color: var(--paper);
+    box-shadow: 0 -16px 32px -24px var(--shadow);
+  }
+
+  .dd-sticky-bar__copy {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    min-width: 0;
+  }
+
+  .dd-sticky-bar__label {
+    font-family: var(--dd-font-body);
+    font-size: 0.52rem;
+    font-weight: 700;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--gold);
+  }
+
+  .dd-sticky-bar__date {
+    overflow: hidden;
+    font-family: var(--dd-font-body);
+    font-size: 0.76rem;
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Motion                                                             */
+/* ------------------------------------------------------------------ */
+
+@keyframes dd-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Responsive                                                         */
+/* ------------------------------------------------------------------ */
+
+@media (max-width: 639px) {
+  .dd-hero__seal {
+    display: none;
+  }
+}
+
+@media (min-width: 640px) {
+  .dd-company__list--cast {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 720px) {
+  .dd-show {
+    grid-template-columns: 5.5rem minmax(0, 1fr) auto;
+    gap: 1.5rem;
+  }
+
+  .dd-show__action {
+    grid-column: auto;
+    justify-content: flex-end;
+  }
+}
+
+@media (min-width: 900px) {
+  .dd-hero__inner {
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+  }
+
+  .dd-poster-wrap {
+    width: min(100%, 24rem);
+  }
+
+  .dd-synopsis__grid {
+    grid-template-columns: minmax(0, 0.7fr) minmax(0, 1.3fr);
+    align-items: start;
+  }
+
+  .dd-synopsis__aside {
+    position: sticky;
+    top: 7rem;
+  }
+
+  .dd-company__grid {
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+  }
+
+  .dd-outro__inner {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+@media (min-width: 960px) {
+  .dd-season__inner {
+    grid-template-columns: minmax(0, 1.45fr) minmax(280px, 0.55fr);
+  }
+
+  .dd-booking {
+    position: sticky;
+    top: 6.5rem;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Reduced motion                                                     */
+/* ------------------------------------------------------------------ */
+
+@media (prefers-reduced-motion: reduce) {
+  .dd-page *,
+  .dd-page *::before,
+  .dd-page *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+  }
+
+  .dd-hero__copy,
+  .dd-poster-wrap {
+    animation: none;
+  }
+
+  .dd-poster {
+    transform: none;
+  }
+
+  .dd-page .dd-cta:hover {
+    transform: none;
+  }
+}

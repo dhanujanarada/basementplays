@@ -179,18 +179,11 @@ export const Productions: CollectionConfig = {
           fields: [
             {
               name: 'gallery',
-              type: 'upload',
-              relationTo: 'media',
-              hasMany: true,
-            },
-          ],
-        },
-        {
-          label: 'Backstage',
-          fields: [
-            {
-              name: 'backstage',
               type: 'array',
+              admin: {
+                description:
+                  'Show photos. Add a caption for each image where useful.',
+              },
               fields: [
                 {
                   name: 'image',

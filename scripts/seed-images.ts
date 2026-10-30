@@ -3,7 +3,7 @@ import path from 'node:path'
 
 import sharp from 'sharp'
 
-export type ImageKind = 'poster' | 'hero' | 'gallery' | 'backstage'
+export type ImageKind = 'poster' | 'hero' | 'gallery'
 
 export type ImageMotif = 'crown' | 'sun' | 'stage' | 'candid'
 
@@ -26,7 +26,6 @@ const dimensions: Record<ImageKind, { height: number; width: number }> = {
   poster: { height: 1800, width: 1200 },
   hero: { height: 1080, width: 1920 },
   gallery: { height: 1000, width: 1600 },
-  backstage: { height: 900, width: 1400 },
 }
 
 export async function renderPlaceholder(

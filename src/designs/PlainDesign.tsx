@@ -2,7 +2,8 @@ import { RichText } from '@payloadcms/richtext-lexical/react'
 import Image from 'next/image'
 import Link from 'next/link'
 
-import { Gallery } from '@/components/Gallery'
+import { Gallery, type GalleryImage } from '@/components/Gallery'
+import { SiteFooter } from '@/components/SiteFooter'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { Container } from '@/components/ui/Container'
@@ -11,7 +12,7 @@ import {
   formatStatus,
   statusTone,
 } from '@/lib/format'
-import { mediaImage, type MediaImage } from '@/lib/media'
+import { mediaImage } from '@/lib/media'
 import { getUpcomingShow, sortRunsNewestFirst, sortShowsAscending } from '@/lib/shows'
 import type { ProductionDesignProps } from '@/lib/types'
 
@@ -21,14 +22,10 @@ export function PlainDesign({ production, runs }: ProductionDesignProps) {
   const nextShow = getUpcomingShow(runs)
   const orderedRuns = sortRunsNewestFirst(runs)
 
-  const gallery = (production.gallery ?? [])
-    .map((image) => mediaImage(image, 'full'))
-    .filter((image): image is MediaImage => image !== null)
+  const gallery: GalleryImage[] = (production.gallery ?? []).flatMap((item) => {
+    const image = mediaImage(item.image, 'full')
 
-  const backstage = (production.backstage ?? []).flatMap((item) => {
-    const image = mediaImage(item.image, 'card')
-
-    return image ? [{ ...item, image }] : []
+    return image ? [{ ...image, caption: item.caption ?? undefined }] : []
   })
 
   const credits = [
@@ -403,44 +400,6 @@ export function PlainDesign({ production, runs }: ProductionDesignProps) {
         </section>
       ) : null}
 
-      {backstage.length > 0 ? (
-        <section
-          aria-labelledby="backstage-heading"
-          className="border-b border-[var(--border)] bg-[#17130f]"
-        >
-          <Container className="py-20">
-            <SectionHeading
-              eyebrow="Behind the scenes"
-              headingId="backstage-heading"
-              title="Backstage"
-            />
-            <div className="mt-10 grid gap-6 md:grid-cols-2">
-              {backstage.map((item, index) => (
-                <figure
-                  className="overflow-hidden rounded-sm border border-[#3a2f24] bg-[#211a14]"
-                  key={item.id ?? `${item.image.src}-${index}`}
-                >
-                  <div className="relative aspect-[4/3]">
-                    <Image
-                      alt={item.image.alt}
-                      className="object-cover"
-                      fill
-                      sizes="(min-width: 768px) 50vw, 100vw"
-                      src={item.image.src}
-                    />
-                  </div>
-                  {item.caption ? (
-                    <figcaption className="px-5 py-4 text-sm leading-6 text-[#c9bba9]">
-                      {item.caption}
-                    </figcaption>
-                  ) : null}
-                </figure>
-              ))}
-            </div>
-          </Container>
-        </section>
-      ) : null}
-
       <section>
         <Container className="flex flex-col items-start gap-5 py-16 sm:flex-row sm:items-center sm:justify-between">
           <div>
@@ -456,6 +415,8 @@ export function PlainDesign({ production, runs }: ProductionDesignProps) {
           </Button>
         </Container>
       </section>
+
+      <SiteFooter />
     </article>
   )
 }

@@ -8,7 +8,10 @@ export const Users: CollectionConfig = {
     group: 'System',
     useAsTitle: 'email',
   },
-  auth: true,
+  auth: {
+    maxLoginAttempts: 5,
+    lockTime: 10 * 60 * 1000,
+  },
   access: {
     create: canCreateUser,
     read: isAdmin,
@@ -21,15 +24,15 @@ export const Users: CollectionConfig = {
       name: 'role',
       type: 'select',
       required: true,
-      defaultValue: 'editor',
+      defaultValue: 'member',
       options: [
         {
           label: 'Admin',
           value: 'admin',
         },
         {
-          label: 'Editor',
-          value: 'editor',
+          label: 'Member',
+          value: 'member',
         },
       ],
       saveToJWT: true,

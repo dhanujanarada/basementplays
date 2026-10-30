@@ -1,7 +1,7 @@
 import type { Access } from 'payload'
 
 type UserWithRole = {
-  role?: 'admin' | 'editor'
+  role?: 'admin' | 'member'
 } | null
 
 export const anyone: Access = () => true
@@ -16,6 +16,7 @@ export const canCreateUser: Access = async ({ req }) => {
     return true
   }
 
+  // Payload's first-user flow needs to create a user before any admin exists.
   const { totalDocs } = await req.payload.count({
     collection: 'users',
   })

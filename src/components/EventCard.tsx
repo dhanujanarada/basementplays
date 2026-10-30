@@ -8,11 +8,16 @@ import { mediaImage } from '@/lib/media'
 import type { ShowEntry } from '@/lib/types'
 
 type EventCardProps = {
+  groupName?: string
   nextShow: ShowEntry | null
   production: Production
 }
 
-export function EventCard({ nextShow, production }: EventCardProps) {
+export function EventCard({
+  groupName = 'Basement Plays',
+  nextShow,
+  production,
+}: EventCardProps) {
   const poster = mediaImage(production.poster, 'card')
 
   return (
@@ -32,7 +37,7 @@ export function EventCard({ nextShow, production }: EventCardProps) {
         ) : (
           <div className="site-grid flex h-full flex-col justify-between p-6">
             <span className="text-[10px] font-medium uppercase tracking-[0.22em] text-[var(--accent)]">
-              Basement Plays
+              {groupName}
             </span>
             <span className="font-display text-3xl leading-[0.95] text-[var(--text)]">
               {production.title}

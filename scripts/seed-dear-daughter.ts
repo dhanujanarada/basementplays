@@ -71,11 +71,12 @@ const hero: PlaceholderImage = {
   title: 'DEAR|DAUGHTER',
 }
 
-const galleryImages: PlaceholderImage[] = [
+const galleryImages: (PlaceholderImage & { caption: string })[] = [
   {
     accent: palette.accent,
     alt: 'Placeholder production still: the family gathers around a kitchen table',
     background: palette.deep,
+    caption: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
     eyebrow: 'Production still',
     foreground: palette.foreground,
     key: 'dear-daughter-gallery-1',
@@ -88,6 +89,8 @@ const galleryImages: PlaceholderImage[] = [
     accent: palette.wood,
     alt: 'Placeholder production still: a letter is read aloud',
     background: palette.background,
+    caption:
+      'Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
     eyebrow: 'Production still',
     foreground: palette.foreground,
     key: 'dear-daughter-gallery-2',
@@ -100,6 +103,8 @@ const galleryImages: PlaceholderImage[] = [
     accent: palette.accent,
     alt: 'Placeholder production still: two figures talk in the garden',
     background: palette.deep,
+    caption:
+      'Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.',
     eyebrow: 'Production still',
     foreground: palette.foreground,
     key: 'dear-daughter-gallery-3',
@@ -112,6 +117,8 @@ const galleryImages: PlaceholderImage[] = [
     accent: palette.wood,
     alt: 'Placeholder production still: two chairs face each other under a lamp',
     background: palette.background,
+    caption:
+      'Duis aute irure dolor in reprehenderit in voluptate velit esse cillum.',
     eyebrow: 'Production still',
     foreground: palette.foreground,
     key: 'dear-daughter-gallery-4',
@@ -124,6 +131,8 @@ const galleryImages: PlaceholderImage[] = [
     accent: palette.accent,
     alt: 'Placeholder production still: a figure looks out of a window',
     background: palette.deep,
+    caption:
+      'Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia.',
     eyebrow: 'Production still',
     foreground: palette.foreground,
     key: 'dear-daughter-gallery-5',
@@ -136,6 +145,8 @@ const galleryImages: PlaceholderImage[] = [
     accent: palette.wood,
     alt: 'Placeholder production still: the final scene in low light',
     background: palette.background,
+    caption:
+      'Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit.',
     eyebrow: 'Production still',
     foreground: palette.foreground,
     key: 'dear-daughter-gallery-6',
@@ -144,64 +155,33 @@ const galleryImages: PlaceholderImage[] = [
     subtitle: 'Act III, scene ii',
     title: 'LAST|LIGHT',
   },
-]
-
-const backstageSeeds: (PlaceholderImage & { caption: string })[] = [
   {
-    accent: palette.wood,
-    alt: 'Placeholder backstage photo: a table covered in props and scripts',
-    background: '#322a20',
+    accent: palette.accent,
+    alt: 'Placeholder production still: a table set for a family meal',
+    background: palette.deep,
     caption:
-      'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer posuere erat a ante venenatis.',
-    eyebrow: 'Behind the scenes',
-    foreground: '#f6edda',
-    key: 'dear-daughter-backstage-1',
-    kind: 'backstage',
-    motif: 'candid',
-    subtitle: 'Backstage — props table',
-    title: 'PROPS|TABLE',
+      'Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet.',
+    eyebrow: 'Production still',
+    foreground: palette.foreground,
+    key: 'dear-daughter-gallery-7',
+    kind: 'gallery',
+    motif: 'stage',
+    subtitle: 'Act III, scene iii',
+    title: 'THE|MEAL',
   },
   {
     accent: palette.wood,
-    alt: 'Placeholder backstage photo: a costume rack in the rehearsal room',
-    background: '#2d3428',
+    alt: 'Placeholder production still: the cast takes a final bow',
+    background: palette.background,
     caption:
-      'Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam.',
-    eyebrow: 'Behind the scenes',
-    foreground: '#f6edda',
-    key: 'dear-daughter-backstage-2',
-    kind: 'backstage',
-    motif: 'candid',
-    subtitle: 'Backstage — costume rack',
-    title: 'COSTUME|RAIL',
-  },
-  {
-    accent: palette.wood,
-    alt: 'Placeholder backstage photo: the stage manager calling cues',
-    background: '#30251f',
-    caption:
-      'Quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.',
-    eyebrow: 'Behind the scenes',
-    foreground: '#f6edda',
-    key: 'dear-daughter-backstage-3',
-    kind: 'backstage',
-    motif: 'candid',
-    subtitle: 'Backstage — cue call',
-    title: 'CUE|CALL',
-  },
-  {
-    accent: palette.wood,
-    alt: 'Placeholder backstage photo: the cast sharing a meal after rehearsal',
-    background: '#383026',
-    caption:
-      'Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.',
-    eyebrow: 'Behind the scenes',
-    foreground: '#f6edda',
-    key: 'dear-daughter-backstage-4',
-    kind: 'backstage',
-    motif: 'candid',
-    subtitle: 'Backstage — after rehearsal',
-    title: 'AFTER|REHEARSAL',
+      'Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit.',
+    eyebrow: 'Production still',
+    foreground: palette.foreground,
+    key: 'dear-daughter-gallery-8',
+    kind: 'gallery',
+    motif: 'stage',
+    subtitle: 'Curtain call',
+    title: 'FINAL|BOW',
   },
 ]
 
@@ -230,18 +210,11 @@ if (production) {
 
   const posterMedia = await uploadPlaceholder(payload, poster)
   const heroMedia = await uploadPlaceholder(payload, hero)
-  const gallery: number[] = []
+  const gallery: { caption?: string; image: number }[] = []
 
   for (const image of galleryImages) {
     const media = await uploadPlaceholder(payload, image)
-    gallery.push(media.id)
-  }
-
-  const backstage: { caption: string; image: number }[] = []
-
-  for (const image of backstageSeeds) {
-    const media = await uploadPlaceholder(payload, image)
-    backstage.push({
+    gallery.push({
       caption: image.caption,
       image: media.id,
     })
@@ -250,7 +223,6 @@ if (production) {
   production = await payload.create({
     collection: 'productions',
     data: {
-      backstage,
       cast: [
         { name: 'Cast Member 1', role: 'Role 1' },
         { name: 'Cast Member 2', role: 'Role 2' },
@@ -290,22 +262,25 @@ if (production) {
   console.log(`Created production: ${productionTitle} (id ${production.id})`)
 }
 
-await seedRun(payload, production.id)
+const runId = await seedRun(payload, production.id)
 
 console.log('')
 console.log('!'.repeat(78))
-console.log('!!  PLACEHOLDER SHOW DATE — SET THE REAL DATE IN THE ADMIN PANEL       !!')
+console.log('!!  PLACEHOLDER SHOW DATE — SET THE REAL DATE IN BACKSTAGE             !!')
 console.log(`!!  Seeded date: ${placeholderDateLabel}`)
 console.log('!!  The poster cuts off the day of the month, so this date is NOT final.')
 console.log(
-  `!!  Admin: http://localhost:3000/admin/collections/productions/${production.id}`,
+  `!!  Backstage: http://localhost:3000/backstage/collections/runs/${runId}`,
 )
 console.log('!'.repeat(78))
 console.log('')
 
 process.exit(0)
 
-async function seedRun(payload: Payload, productionId: number): Promise<void> {
+async function seedRun(
+  payload: Payload,
+  productionId: number,
+): Promise<number> {
   const existingRun = await payload.find({
     collection: 'runs',
     depth: 0,
@@ -329,10 +304,10 @@ async function seedRun(payload: Payload, productionId: number): Promise<void> {
 
   if (existingRun.docs.length > 0) {
     console.log(`Run already exists: ${runLabel}. Skipping.`)
-    return
+    return existingRun.docs[0].id
   }
 
-  await payload.create({
+  const run = await payload.create({
     collection: 'runs',
     data: {
       label: runLabel,
@@ -352,6 +327,7 @@ async function seedRun(payload: Payload, productionId: number): Promise<void> {
   })
 
   console.log(`Created run: ${runLabel} at ${venue}`)
+  return run.id
 }
 
 async function uploadPlaceholder(

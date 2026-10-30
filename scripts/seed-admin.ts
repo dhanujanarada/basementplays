@@ -2,15 +2,20 @@ import 'dotenv/config'
 
 import fs from 'node:fs'
 
+import type { Payload } from 'payload'
 import { getPayload } from 'payload'
 
 import config from '../src/payload.config'
 
-const email = process.env.SEED_ADMIN_EMAIL
-const password = process.env.SEED_ADMIN_PASSWORD
+type Role = 'admin' | 'member'
+
+const adminEmail = process.env.SEED_ADMIN_EMAIL
+const adminPassword = process.env.SEED_ADMIN_PASSWORD
+const memberEmail = process.env.SEED_MEMBER_EMAIL
+const memberPassword = process.env.SEED_MEMBER_PASSWORD
 const databaseUrl = process.env.DATABASE_URL || 'file:./payload.db'
 
-if (!email || !password) {
+if (!adminEmail || !adminPassword) {
   throw new Error(
     'Set SEED_ADMIN_EMAIL and SEED_ADMIN_PASSWORD before running this script.',
   )
@@ -28,32 +33,50 @@ if (databaseUrl.startsWith('file:')) {
 
 const payload = await getPayload({ config })
 
-const existing = await payload.find({
-  collection: 'users',
-  depth: 0,
-  limit: 1,
-  overrideAccess: true,
-  where: {
-    email: {
-      equals: email,
-    },
-  },
-})
+await ensureUser(payload, adminEmail, adminPassword, 'admin')
 
-if (existing.docs.length > 0) {
-  console.log(`Admin user already exists: ${email}`)
-  process.exit(0)
+if (memberEmail && memberPassword) {
+  await ensureUser(payload, memberEmail, memberPassword, 'member')
+} else {
+  console.log(
+    'Skipping member user seed. Set SEED_MEMBER_EMAIL and SEED_MEMBER_PASSWORD to create one.',
+  )
 }
 
-await payload.create({
-  collection: 'users',
-  data: {
-    email,
-    password,
-    role: 'admin',
-  },
-  overrideAccess: true,
-})
-
-console.log(`Created admin user: ${email}`)
 process.exit(0)
+
+async function ensureUser(
+  payload: Payload,
+  email: string,
+  password: string,
+  role: Role,
+): Promise<void> {
+  const existing = await payload.find({
+    collection: 'users',
+    depth: 0,
+    limit: 1,
+    overrideAccess: true,
+    where: {
+      email: {
+        equals: email,
+      },
+    },
+  })
+
+  if (existing.docs.length > 0) {
+    console.log(`${role} user already exists: ${email}`)
+    return
+  }
+
+  await payload.create({
+    collection: 'users',
+    data: {
+      email,
+      password,
+      role,
+    },
+    overrideAccess: true,
+  })
+
+  console.log(`Created ${role} user: ${email}`)
+}

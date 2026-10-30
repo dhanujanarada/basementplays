@@ -93,8 +93,12 @@ export interface Config {
     defaultIDType: number;
   };
   fallbackLocale: null;
-  globals: {};
-  globalsSelect: {};
+  globals: {
+    'site-settings': SiteSetting;
+  };
+  globalsSelect: {
+    'site-settings': SiteSettingsSelect<false> | SiteSettingsSelect<true>;
+  };
   locale: null;
   widgets: {
     collections: CollectionsWidget;
@@ -129,7 +133,7 @@ export interface UserAuthOperations {
  */
 export interface User {
   id: number;
-  role: 'admin' | 'editor';
+  role: 'admin' | 'member';
   updatedAt: string;
   createdAt: string;
   email: string;
@@ -259,8 +263,10 @@ export interface Production {
         id?: string | null;
       }[]
     | null;
-  gallery?: (number | Media)[] | null;
-  backstage?:
+  /**
+   * Show photos. Add a caption for each image where useful.
+   */
+  gallery?:
     | {
         image: number | Media;
         caption?: string | null;
@@ -512,8 +518,7 @@ export interface ProductionsSelect<T extends boolean = true> {
         role?: T;
         id?: T;
       };
-  gallery?: T;
-  backstage?:
+  gallery?:
     | T
     | {
         image?: T;
@@ -597,6 +602,73 @@ export interface PayloadMigrationsSelect<T extends boolean = true> {
   batch?: T;
   updatedAt?: T;
   createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "site-settings".
+ */
+export interface SiteSetting {
+  id: number;
+  groupName: string;
+  tagline?: string | null;
+  aboutText?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  aboutImage?: (number | null) | Media;
+  email?: string | null;
+  phone?: string | null;
+  /**
+   * International format, digits only, e.g. 94764508448
+   */
+  whatsappNumber?: string | null;
+  locationText?: string | null;
+  mapsUrl?: string | null;
+  socialLinks?:
+    | {
+        platform: 'instagram' | 'facebook' | 'youtube' | 'tiktok' | 'x' | 'other';
+        url: string;
+        id?: string | null;
+      }[]
+    | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "site-settings_select".
+ */
+export interface SiteSettingsSelect<T extends boolean = true> {
+  groupName?: T;
+  tagline?: T;
+  aboutText?: T;
+  aboutImage?: T;
+  email?: T;
+  phone?: T;
+  whatsappNumber?: T;
+  locationText?: T;
+  mapsUrl?: T;
+  socialLinks?:
+    | T
+    | {
+        platform?: T;
+        url?: T;
+        id?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
