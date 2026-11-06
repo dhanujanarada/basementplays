@@ -5,6 +5,13 @@
 - This repo is a placeholder: it contains only `README.md`; there is no source, manifest, tests, lint/format config, or CI. Inspect the tree before assuming commands; do not invent them.
 - The `origin` remote is `https://github.com/dhanujanarada/basementplays.git`; local `main` tracks `origin/main`.
 
+## Documentation
+
+- When finishing a build step, update the matching docs in the same commit.
+- When a decision changes, add a new decision record in `docs/decisions/` that supersedes the old one; do not edit history in place.
+- Run `scripts/check-docs.sh` before committing documentation changes.
+- Start at `docs/README.md` for reading order and conventions. Temporary code/spec gaps live in `docs/DISCREPANCIES.md`.
+
 ## Related codebase
 
 - `../basement_booking_platform` is the existing Basement Plays booking processor and the only related code in this workspace. Its Google Cloud project ID is `basementplays`.
