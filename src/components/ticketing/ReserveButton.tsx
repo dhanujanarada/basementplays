@@ -1,31 +1,31 @@
-import type { Production } from '@/payload-types'
-
 import { Button } from '@/components/ui/Button'
 import { formatStatus } from '@/lib/format'
-import { bookingHref, isTicketingEnabled } from '@/lib/ticketing/booking'
-import type { Show } from '@/lib/types'
+import type { EventShow, EventView } from '@/lib/event-view'
+import {
+  bookingHref,
+  isExternalBookingHref,
+} from '@/lib/ticketing/booking'
 
 type ReserveButtonProps = {
   className?: string
-  // The design's existing label, kept when ticketing is disabled.
+  event: EventView
+  // The design's existing label, kept when the event falls back to WhatsApp.
   label: string
-  production: Production
-  show: Show | null | undefined
+  show: EventShow | null | undefined
   variant?: 'primary' | 'secondary' | 'ghost'
 }
 
 // Every Reserve/Book button goes through this component so there is exactly
-// one place that decides between the ticketing flow and the external ticket
-// link.
+// one place that decides between the ticketing flow and the WhatsApp fallback.
 export function ReserveButton({
   className = '',
+  event,
   label,
-  production,
   show,
   variant = 'primary',
 }: ReserveButtonProps) {
-  const href = bookingHref(production, show)
-  const ticketing = isTicketingEnabled(show)
+  const href = bookingHref(event, show)
+  const external = href ? isExternalBookingHref(href) : false
 
   if (!href) {
     const status = show ? formatStatus(show.status) : 'Unavailable'
@@ -44,10 +44,10 @@ export function ReserveButton({
     <Button
       className={className}
       href={href}
-      {...(ticketing ? {} : { rel: 'noreferrer', target: '_blank' })}
+      {...(external ? { rel: 'noreferrer', target: '_blank' } : {})}
       variant={variant}
     >
-      {ticketing ? 'Reserve seats' : label}
+      {event.ticketing.active ? 'Reserve seats' : label}
     </Button>
   )
 }

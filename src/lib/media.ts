@@ -9,7 +9,7 @@ export type MediaImage = {
   width: number
 }
 
-export function isMedia(
+function isMedia(
   value: Media | number | null | undefined,
 ): value is Media {
   return typeof value === 'object' && value !== null

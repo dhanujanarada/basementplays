@@ -1,34 +1,24 @@
 import type { ComponentType, ReactNode } from 'react'
 
-import type { Production, Run } from '@/payload-types'
+import type { EventShow, EventView } from './event-view'
 
-export type Show = NonNullable<Run['shows']>[number]
-export type ShowStatus = Show['status']
-
-export type ShowEntry = {
-  run: Run
-  show: Show
+export type EventDesignProps = {
+  event: EventView
 }
 
-export type ProductionDesignProps = {
-  production: Production
-  runs: Run[]
-}
-
-export type ProductionShellProps = ProductionDesignProps & {
+export type EventShellProps = EventDesignProps & {
   children: ReactNode
 }
 
-export type ProductionBookingProps = ProductionDesignProps & {
-  run: Run
-  show: Show
+export type EventBookingProps = EventDesignProps & {
+  show: EventShow
 }
 
 // A design owns its page content, its theme shell, and optionally a custom
-// booking layout. The shell is reused by the production, booking, and ticket
-// routes so they all inherit the same palette, fonts, and footer.
+// booking layout. The shell is reused by the event, booking, and ticket routes
+// so they all inherit the same palette, fonts, and footer.
 export type ProductionDesign = {
-  Page: ComponentType<ProductionDesignProps>
-  Shell: ComponentType<ProductionShellProps>
-  Booking?: ComponentType<ProductionBookingProps>
+  Page: ComponentType<EventDesignProps>
+  Shell: ComponentType<EventShellProps>
+  Booking?: ComponentType<EventBookingProps>
 }

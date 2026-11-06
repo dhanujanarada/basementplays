@@ -3,15 +3,27 @@
 // client is wired up.
 
 export type SeatStatus = 'available' | 'held' | 'sold' | 'blocked'
+export type PaymentMode = 'bank_transfer' | 'online' | 'off'
+export type SelectionMode = 'quantity' | 'seats'
+export type StagePosition = 'front' | 'back' | 'none'
+type PaymentMethod = 'payhere' | 'bank_transfer' | 'cash' | 'whatsapp'
 
 export const MAX_SEATS_PER_ORDER = 6
 
 export type TierSummary = {
-  key: string
+  tier_id: string
   name: string
   price_cents: number
   seats_total: number
   seats_remaining: number
+}
+
+export type BankTransferDetails = {
+  bank_name: string
+  account_name: string
+  account_number: string
+  branch: string
+  instructions: string
 }
 
 export type ShowSummary = {
@@ -21,6 +33,10 @@ export type ShowSummary = {
   starts_at: string
   venue: string
   status: string
+  payment_mode: PaymentMode
+  selection_mode: SelectionMode
+  stage_position: StagePosition
+  numbering: boolean
   currency: string
   columns: number
   stage_label: string
@@ -33,7 +49,7 @@ export type ShowSummary = {
 export type Seat = {
   code: string
   label: string | null
-  tier_key: string
+  tier_id: string
   tier_name: string
   price_cents: number
   status: SeatStatus
@@ -43,6 +59,10 @@ export type Seat = {
 export type SeatMap = {
   show_id: string
   status: string
+  payment_mode: PaymentMode
+  selection_mode: SelectionMode
+  stage_position: StagePosition
+  numbering: boolean
   currency: string
   columns: number
   stage_label: string
@@ -55,7 +75,7 @@ export type SeatMap = {
 export type OrderSeat = {
   code: string
   label: string | null
-  tier_key: string
+  tier_id: string
   tier_name: string
   price_cents: number
 }
@@ -66,6 +86,8 @@ export type PublicTicket = {
   status: 'issued' | 'used' | 'void'
   issued_at: string
   used_at: string | null
+  qr_token?: string | null
+  qr_url?: string | null
 }
 
 export type PublicOrder = {
@@ -73,11 +95,13 @@ export type PublicOrder = {
   show_id: string
   status: 'pending' | 'paid' | 'expired' | 'cancelled' | 'needs_review'
   source: 'online' | 'manual'
+  payment_method: PaymentMethod
   total_cents: number
   currency: string
   expires_at: string
   paid_at: string | null
   created_at: string
+  bank_transfer: BankTransferDetails | null
   seats: OrderSeat[]
   tickets: PublicTicket[]
 }
@@ -93,6 +117,14 @@ export type Hold = {
   seats: OrderSeat[]
   order_token?: string
 }
+
+export type HoldRequest =
+  | {
+      tiers: { tier_id: string; quantity: number }[]
+    }
+  | {
+      seats: string[]
+    }
 
 export type CheckoutInput = {
   buyer_name: string
@@ -111,7 +143,7 @@ export type Ticket = {
   venue: string
   seat_code: string
   seat_label: string | null
-  tier_key: string
+  tier_id: string
   tier_name: string
   description: string
   price_cents: number
@@ -125,7 +157,7 @@ export type TicketingClient = {
   getSeatMap(showId: string): Promise<SeatMap>
   createHold(
     showId: string,
-    seats: string[],
+    request: HoldRequest,
     options?: { idempotencyKey?: string },
   ): Promise<Hold>
   releaseOrder(orderID: string, orderToken: string): Promise<void>
@@ -138,6 +170,8 @@ export type TicketingClient = {
   getOrder(orderID: string, orderToken: string): Promise<PublicOrder>
   getTicket(token: string): Promise<Ticket>
   ticketHref(order: PublicOrder, ticket: PublicTicket): string
+  /** Dev-only mock helper; the real service marks paid from Backstage. */
+  devMarkPaid?(orderID: string, orderToken: string): Promise<PublicOrder>
 }
 
 export class TicketingError extends Error {

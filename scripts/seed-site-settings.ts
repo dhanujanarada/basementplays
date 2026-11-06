@@ -48,10 +48,19 @@ if (existing.tagline && existing.aboutText) {
         'Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.',
         'Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.',
       ]),
+      bankTransfer: {
+        accountName: 'Basement Plays (Pvt) Ltd',
+        accountNumber: '0000 0000 0000',
+        bankName: 'Placeholder Bank',
+        branch: 'Kandy',
+        instructions:
+          'Use your order reference as the transfer description, then send the receipt to the box office on WhatsApp.',
+      },
       email: 'hello@example.com',
       groupName: 'Basement',
       locationText: 'Kandy, Sri Lanka',
       mapsUrl: `https://www.google.com/maps/search/?api=1&query=${mapsQuery}`,
+      phone: '+94 76 450 8448',
       socialLinks,
       tagline: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
       whatsappNumber: '94764508448',
@@ -73,6 +82,7 @@ console.log('!!  whatsappNumber: 94764508448')
 console.log('!!  locationText:   Kandy, Sri Lanka')
 console.log('!!  mapsUrl:        Google Maps search for "Kandy, Sri Lanka"')
 console.log('!!  socialLinks:    https://instagram.com/example, https://facebook.com/example')
+console.log('!!  bankTransfer:   Placeholder Bank · 0000 0000 0000 · Kandy')
 console.log('!!  aboutImage:     not set — add a real image')
 console.log(
   '!!  Backstage:      http://localhost:3000/backstage/globals/site-settings',

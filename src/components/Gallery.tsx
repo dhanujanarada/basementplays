@@ -1,11 +1,15 @@
 'use client'
 
+import dynamic from 'next/dynamic'
 import Image from 'next/image'
 import { useState } from 'react'
-import Lightbox from 'yet-another-react-lightbox'
 import 'yet-another-react-lightbox/styles.css'
 
 import type { MediaImage } from '@/lib/media'
+
+const Lightbox = dynamic(() => import('yet-another-react-lightbox'), {
+  ssr: false,
+})
 
 export type GalleryImage = MediaImage & {
   caption?: string
@@ -54,18 +58,20 @@ export function Gallery({ images }: GalleryProps) {
         ))}
       </div>
 
-      <Lightbox
-        close={() => setActiveIndex(-1)}
-        index={activeIndex}
-        open={activeIndex >= 0}
-        slides={images.map((image) => ({
-          alt: image.alt,
-          description: image.caption,
-          height: image.height,
-          src: image.src,
-          width: image.width,
-        }))}
-      />
+      {activeIndex >= 0 ? (
+        <Lightbox
+          close={() => setActiveIndex(-1)}
+          index={activeIndex}
+          open
+          slides={images.map((image) => ({
+            alt: image.alt,
+            description: image.caption,
+            height: image.height,
+            src: image.src,
+            width: image.width,
+          }))}
+        />
+      ) : null}
     </>
   )
 }

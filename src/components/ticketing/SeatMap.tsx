@@ -5,6 +5,8 @@ import type { CSSProperties } from 'react'
 import { formatPrice } from '@/lib/ticketing/format'
 import type { SeatMap as SeatMapData, SeatStatus } from '@/lib/ticketing/types'
 
+import { StageBar } from './StageBar'
+
 import './ticketing.css'
 
 type SeatMapProps = {
@@ -28,18 +30,20 @@ export function SeatMap({
   selected,
 }: SeatMapProps) {
   const selectedSet = new Set(selected)
+  const tiers =
+    map.stage_position === 'back' ? [...map.tiers].reverse() : map.tiers
 
   return (
     <div>
-      <p className="tk-stage">{map.stage_label || 'Stage'}</p>
+      <StageBar label={map.stage_label} position={map.stage_position} />
 
-      {map.tiers.map((tier) => {
+      {tiers.map((tier) => {
         const seats = map.seats
-          .filter((seat) => seat.tier_key === tier.key)
+          .filter((seat) => seat.tier_id === tier.tier_id)
           .sort((a, b) => a.sort_index - b.sort_index)
 
         return (
-          <section className="tk-tier" key={tier.key}>
+          <section className="tk-tier" key={tier.tier_id}>
             <div className="tk-tier-head">
               <h3>{tier.name}</h3>
               <p className="tk-tier-meta">
@@ -85,6 +89,10 @@ export function SeatMap({
           </section>
         )
       })}
+
+      {map.stage_position === 'back' ? (
+        <StageBar label={map.stage_label} position="back" />
+      ) : null}
 
       <ul className="tk-legend" aria-label="Seat status legend">
         <li>

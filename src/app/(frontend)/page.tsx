@@ -5,48 +5,38 @@ import { EventCard } from '@/components/EventCard'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { Container } from '@/components/ui/Container'
-import type { Production } from '@/payload-types'
+import { getNextShow, type EventShow, type EventView } from '@/lib/event-view'
 import { formatShowDate, formatStatus, statusTone } from '@/lib/format'
 import { mediaImage } from '@/lib/media'
-import {
-  getAllProductions,
-  getRunsForProduction,
-  getSiteSettings,
-} from '@/lib/payload'
-import { getUpcomingShow } from '@/lib/shows'
-import type { ShowEntry } from '@/lib/types'
+import { getAllEventViews, getSiteSettings } from '@/lib/payload'
 
 export const dynamic = 'force-dynamic'
 
 type NextProduction = {
-  nextShow: ShowEntry
-  production: Production
+  event: EventView
+  nextShow: EventShow
 }
 
 export default async function HomePage() {
-  const [productions, settings] = await Promise.all([
-    getAllProductions(),
+  const [events, settings] = await Promise.all([
+    getAllEventViews(),
     getSiteSettings(),
   ])
-  const upcoming = (
-    await Promise.all(
-      productions.map(async (production) => {
-        const runs = await getRunsForProduction(production.id)
-        const nextShow = getUpcomingShow(runs)
+  const upcoming = events
+    .map((event) => {
+      const nextShow = getNextShow(event)
 
-        return nextShow ? { nextShow, production } : null
-      }),
-    )
-  )
+      return nextShow ? { event, nextShow } : null
+    })
     .filter((item): item is NextProduction => item !== null)
     .sort(
       (a, b) =>
-        new Date(a.nextShow.show.startsAt).getTime() -
-        new Date(b.nextShow.show.startsAt).getTime(),
+        new Date(a.nextShow.startsAt).getTime() -
+        new Date(b.nextShow.startsAt).getTime(),
     )
 
   const next = upcoming[0]
-  const poster = next ? mediaImage(next.production.poster, 'card') : null
+  const poster = next ? mediaImage(next.event.poster, 'card') : null
   const groupName = settings.groupName || 'Basement Plays'
   const tagline =
     settings.tagline ??
@@ -66,30 +56,28 @@ export default async function HomePage() {
             {next ? (
               <>
                 <p className="mt-8 text-xs font-medium uppercase tracking-[0.22em] text-[var(--muted)]">
-                  {next.nextShow.run.venue ??
-                    settings.locationText ??
-                    groupName}
+                  {next.nextShow.venue || settings.locationText || groupName}
                 </p>
                 <h1 className="font-display mt-4 text-5xl leading-[0.95] tracking-tight text-[var(--text)] sm:text-7xl lg:text-8xl">
-                  {next.production.title}
+                  {next.event.title}
                 </h1>
-                {next.production.tagline ? (
+                {next.event.tagline ? (
                   <p className="mt-7 max-w-xl text-base leading-7 text-[var(--muted)] sm:text-lg">
-                    {next.production.tagline}
+                    {next.event.tagline}
                   </p>
                 ) : null}
 
                 <div className="mt-8 flex flex-wrap items-center gap-4">
-                  <Badge tone={statusTone(next.nextShow.show.status)}>
-                    {formatStatus(next.nextShow.show.status)}
+                  <Badge tone={statusTone(next.nextShow.status)}>
+                    {formatStatus(next.nextShow.status)}
                   </Badge>
                   <p className="text-sm text-[var(--muted)]">
-                    {formatShowDate(next.nextShow.show.startsAt)}
+                    {formatShowDate(next.nextShow.startsAt)}
                   </p>
                 </div>
 
                 <div className="mt-10 flex flex-wrap items-center gap-4">
-                  <Button href={`/events/${next.production.slug}`}>
+                  <Button href={`/events/${next.event.slug}`}>
                     View production
                   </Button>
                   <Button href="/events" variant="secondary">
@@ -129,7 +117,7 @@ export default async function HomePage() {
                     {groupName}
                   </span>
                   <span className="font-display text-4xl leading-none text-[var(--text)]">
-                    {next.production.title}
+                    {next.event.title}
                   </span>
                 </div>
               )}
@@ -177,12 +165,12 @@ export default async function HomePage() {
 
           {upcoming.length > 0 ? (
             <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {upcoming.map(({ nextShow, production }) => (
+              {upcoming.map(({ event, nextShow }) => (
                 <EventCard
+                  event={event}
                   groupName={groupName}
-                  key={production.id}
+                  key={event.id}
                   nextShow={nextShow}
-                  production={production}
                 />
               ))}
             </div>

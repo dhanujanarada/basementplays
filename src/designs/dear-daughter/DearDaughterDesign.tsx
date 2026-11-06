@@ -5,27 +5,14 @@ import Link from 'next/link'
 
 import { Gallery, type GalleryImage } from '@/components/Gallery'
 import { SiteFooter } from '@/components/SiteFooter'
-import { ReserveButton } from '@/components/ticketing/ReserveButton'
 import { Button } from '@/components/ui/Button'
 import { Container } from '@/components/ui/Container'
-import {
-  formatLongShowDate,
-  formatShowDate,
-  formatShowTime,
-  formatStatus,
-} from '@/lib/format'
+import { formatLongShowDate, formatShowDate } from '@/lib/format'
+import { getNextShow, showSeasonLabel } from '@/lib/event-view'
 import { mediaImage } from '@/lib/media'
-import {
-  getUpcomingShow,
-  sortRunsNewestFirst,
-  sortShowsAscending,
-} from '@/lib/shows'
-import { bookingHref, isBookableShow } from '@/lib/ticketing/booking'
-import type {
-  ProductionDesignProps,
-  ProductionShellProps,
-} from '@/lib/types'
+import type { EventDesignProps, EventShellProps } from '@/lib/types'
 
+import { DearDaughterSeason } from './DearDaughterSeason'
 import './dear-daughter.css'
 
 const displayFont = Caveat_Brush({
@@ -41,50 +28,6 @@ const bodyFont = Quicksand({
   display: 'swap',
 })
 
-const siteTimeZone = 'Asia/Colombo'
-
-const weekdayFormatter = new Intl.DateTimeFormat('en-GB', {
-  timeZone: siteTimeZone,
-  weekday: 'short',
-})
-
-const dayFormatter = new Intl.DateTimeFormat('en-GB', {
-  day: '2-digit',
-  timeZone: siteTimeZone,
-})
-
-const monthFormatter = new Intl.DateTimeFormat('en-GB', {
-  month: 'short',
-  timeZone: siteTimeZone,
-})
-
-type DateParts = {
-  day: string
-  full: string
-  month: string
-  weekday: string
-}
-
-function dateParts(value: string): DateParts {
-  const date = new Date(value)
-
-  if (Number.isNaN(date.getTime())) {
-    return {
-      day: '—',
-      full: 'Date to be announced',
-      month: 'TBA',
-      weekday: '',
-    }
-  }
-
-  return {
-    day: dayFormatter.format(date),
-    full: formatLongShowDate(value),
-    month: monthFormatter.format(date),
-    weekday: weekdayFormatter.format(date),
-  }
-}
-
 function initials(name: string): string {
   return name
     .split(/\s+/)
@@ -95,33 +38,27 @@ function initials(name: string): string {
     .toUpperCase()
 }
 
-export function DearDaughterPage({
-  production,
-  runs,
-}: ProductionDesignProps) {
-  const poster = mediaImage(production.poster, 'full')
-  const hero = mediaImage(production.heroImage, 'full') ?? poster
-  const nextShow = getUpcomingShow(runs)
-  const orderedRuns = sortRunsNewestFirst(runs)
-  const venue = nextShow?.run.venue ?? orderedRuns[0]?.venue
+export function DearDaughterPage({ event }: EventDesignProps) {
+  const poster = mediaImage(event.poster, 'full')
+  const hero = mediaImage(event.heroImage, 'full') ?? poster
+  const nextShow = getNextShow(event)
+  const venue = nextShow?.venue ?? event.shows[0]?.venue ?? event.venue
 
-  const gallery: GalleryImage[] = (production.gallery ?? []).flatMap((item) => {
+  const gallery: GalleryImage[] = event.gallery.flatMap((item) => {
     const image = mediaImage(item.image, 'full')
 
     return image ? [{ ...image, caption: item.caption ?? undefined }] : []
   })
 
-  const cast = production.cast ?? []
-  const crew = production.crew ?? []
-  const partners = production.partners ?? []
+  const cast = event.cast
+  const crew = event.crew
+  const partners = event.partners
 
   const credits = [
-    { label: 'Presented by', value: production.presentedBy },
-    { label: 'Written by', value: production.writtenBy },
-    { label: 'Directed by', value: production.directedBy },
+    { label: 'Presented by', value: event.presentedBy },
+    { label: 'Written by', value: event.writtenBy },
+    { label: 'Directed by', value: event.directedBy },
   ].filter((credit) => Boolean(credit.value))
-
-  const nextTicketHref = bookingHref(production, nextShow?.show)
 
   return (
     <>
@@ -147,13 +84,13 @@ export function DearDaughterPage({
             </Link>
 
             <p className="dd-eyebrow">
-              {production.presentedBy ?? 'A Basement production'}
+              {event.presentedBy ?? 'A Basement production'}
             </p>
 
-            <h1 className="dd-title">{production.title}</h1>
+            <h1 className="dd-title">{event.title}</h1>
 
-            {production.tagline ? (
-              <p className="dd-tagline">{production.tagline}</p>
+            {event.tagline ? (
+              <p className="dd-tagline">{event.tagline}</p>
             ) : null}
 
             {credits.length > 0 ? (
@@ -168,18 +105,9 @@ export function DearDaughterPage({
             ) : null}
 
             <div className="dd-hero__actions">
-              {nextTicketHref ? (
-                <ReserveButton
-                  className="dd-cta"
-                  label="Reserve seats"
-                  production={production}
-                  show={nextShow?.show}
-                />
-              ) : (
-                <Button className="dd-cta" href="#show-dates">
-                  See show dates
-                </Button>
-              )}
+              <Button className="dd-cta" href="#booking">
+                Get tickets
+              </Button>
               <a className="dd-text-link" href="#show-dates">
                 Show dates
               </a>
@@ -188,7 +116,7 @@ export function DearDaughterPage({
             {nextShow ? (
               <p className="dd-hero__next">
                 <span aria-hidden />
-                {formatLongShowDate(nextShow.show.startsAt)}
+                {formatLongShowDate(nextShow.startsAt)}
                 {venue ? ` · ${venue}` : ''}
               </p>
             ) : null}
@@ -206,14 +134,14 @@ export function DearDaughterPage({
                 />
               ) : (
                 <div className="dd-poster__fallback">
-                  <span>{production.presentedBy ?? 'Basement Plays'}</span>
-                  <strong>{production.title}</strong>
+                  <span>{event.presentedBy ?? 'Basement Plays'}</span>
+                  <strong>{event.title}</strong>
                 </div>
               )}
             </div>
             <p className="dd-poster__caption">
               {venue ?? 'Basement Plays'}
-              {nextShow ? ` · ${nextShow.run.label}` : ''}
+              {nextShow ? ` · ${showSeasonLabel(nextShow.startsAt)}` : ''}
             </p>
           </div>
         </Container>
@@ -256,175 +184,11 @@ export function DearDaughterPage({
         ) : null}
       </header>
 
-      <section
-        aria-labelledby="dd-show-dates-heading"
-        className="dd-season"
-        id="show-dates"
-      >
-        <div aria-hidden className="dd-torn" />
-
-        <Container className="dd-season__inner">
-          <div className="dd-season__details">
-            <div className="dd-section-intro">
-              <p className="dd-eyebrow">Performances</p>
-              <h2 className="dd-section-title" id="dd-show-dates-heading">
-                Show dates
-              </h2>
-              <p className="dd-section-note">
-                {venue
-                  ? `Join us at ${venue}.`
-                  : 'Dates and venue will be announced soon.'}
-              </p>
-            </div>
-
-            {orderedRuns.length > 0 ? (
-              <div className="dd-runs">
-                {orderedRuns.map((run) => {
-                  const shows = sortShowsAscending(run.shows ?? [])
-
-                  return (
-                    <div className="dd-run" key={run.id}>
-                      <div className="dd-run__head">
-                        <h3>{run.label}</h3>
-                        {run.venue ? <p>{run.venue}</p> : null}
-                      </div>
-
-                      {shows.length > 0 ? (
-                        <ul className="dd-shows">
-                          {shows.map((show, index) => {
-                            const parts = dateParts(show.startsAt)
-                            const canBook = isBookableShow(show)
-                            const meta = [show.price, show.seatsNote]
-                              .filter(Boolean)
-                              .join(' · ')
-
-                            return (
-                              <li
-                                aria-label={parts.full}
-                                className={`dd-show dd-show--${show.status}`}
-                                key={show.id ?? `${show.startsAt}-${index}`}
-                              >
-                                <div className="dd-show__date">
-                                  <span className="dd-show__weekday">
-                                    {parts.weekday}
-                                  </span>
-                                  <span className="dd-show__day">
-                                    {parts.day}
-                                  </span>
-                                  <span className="dd-show__month">
-                                    {parts.month}
-                                  </span>
-                                </div>
-
-                                <div className="dd-show__details">
-                                  <p className="dd-show__time">
-                                    {formatShowTime(show.startsAt)}
-                                  </p>
-                                  {meta ? (
-                                    <p className="dd-show__price">{meta}</p>
-                                  ) : null}
-                                </div>
-
-                                <div className="dd-show__action">
-                                  <span
-                                    className={`dd-status dd-status--${show.status}`}
-                                  >
-                                    {formatStatus(show.status)}
-                                  </span>
-                                  {canBook ? (
-                                    <ReserveButton
-                                      className="dd-ticket-button"
-                                      label="Reserve"
-                                      production={production}
-                                      show={show}
-                                      variant="secondary"
-                                    />
-                                  ) : null}
-                                </div>
-                              </li>
-                            )
-                          })}
-                        </ul>
-                      ) : (
-                        <p className="dd-empty">
-                          No show dates have been announced for this run yet.
-                        </p>
-                      )}
-                    </div>
-                  )
-                })}
-              </div>
-            ) : (
-              <p className="dd-empty">
-                No show dates have been announced yet. Check back soon.
-              </p>
-            )}
-          </div>
-
-          <aside aria-labelledby="dd-booking-heading" className="dd-booking">
-            <p className="dd-eyebrow">Booking</p>
-            <h3 className="dd-booking__title" id="dd-booking-heading">
-              Reserve your seats
-            </h3>
-
-            {nextShow ? (
-              <>
-                <dl className="dd-booking__meta">
-                  <div>
-                    <dt>Next show</dt>
-                    <dd>{formatLongShowDate(nextShow.show.startsAt)}</dd>
-                  </div>
-                  {venue ? (
-                    <div>
-                      <dt>Venue</dt>
-                      <dd>{venue}</dd>
-                    </div>
-                  ) : null}
-                  {nextShow.show.price ? (
-                    <div>
-                      <dt>Tickets</dt>
-                      <dd>{nextShow.show.price}</dd>
-                    </div>
-                  ) : null}
-                  {nextShow.show.seatsNote ? (
-                    <div>
-                      <dt>Availability</dt>
-                      <dd>{nextShow.show.seatsNote}</dd>
-                    </div>
-                  ) : null}
-                </dl>
-
-                {nextTicketHref ? (
-                  <ReserveButton
-                    className="dd-cta dd-booking__button"
-                    label="Reserve seats"
-                    production={production}
-                    show={nextShow.show}
-                  />
-                ) : (
-                  <p className="dd-booking__note">
-                    This performance is{' '}
-                    {formatStatus(nextShow.show.status).toLowerCase()}.
-                  </p>
-                )}
-
-                <p className="dd-booking__note">
-                  Reservations are handled through the ticket link. Seats are
-                  confirmed directly by the company.
-                </p>
-              </>
-            ) : (
-              <p className="dd-empty">
-                Booking opens as soon as the next date is announced.
-              </p>
-            )}
-          </aside>
-        </Container>
-      </section>
+      <DearDaughterSeason event={event} />
 
       <div aria-hidden className="dd-wood-divider" />
 
-      {production.synopsis ? (
+      {event.synopsis ? (
         <section
           aria-labelledby="dd-synopsis-heading"
           className="dd-synopsis"
@@ -438,7 +202,7 @@ export function DearDaughterPage({
               <span aria-hidden className="dd-sprig" />
             </div>
             <div className="dd-synopsis__body">
-              <RichText className="dd-richtext" data={production.synopsis} />
+              <RichText className="dd-richtext" data={event.synopsis} />
             </div>
           </Container>
         </section>
@@ -546,20 +310,17 @@ export function DearDaughterPage({
         </Container>
       </section>
 
-      {nextTicketHref && nextShow ? (
+      {nextShow ? (
         <div className="dd-sticky-bar">
           <div className="dd-sticky-bar__copy">
             <span className="dd-sticky-bar__label">Next show</span>
             <span className="dd-sticky-bar__date">
-              {formatShowDate(nextShow.show.startsAt)}
+              {formatShowDate(nextShow.startsAt)}
             </span>
           </div>
-          <ReserveButton
-            className="dd-cta dd-cta--small"
-            label="Reserve"
-            production={production}
-            show={nextShow.show}
-          />
+          <Button className="dd-cta dd-cta--small" href="#booking">
+            Get tickets
+          </Button>
         </div>
       ) : null}
     </>
@@ -568,10 +329,10 @@ export function DearDaughterPage({
 
 export function DearDaughterShell({
   children,
-  runs,
-}: ProductionShellProps) {
-  const nextShow = getUpcomingShow(runs)
-  const hasBar = isBookableShow(nextShow?.show)
+  event,
+}: EventShellProps) {
+  const nextShow = getNextShow(event)
+  const hasBar = Boolean(nextShow)
 
   return (
     <article

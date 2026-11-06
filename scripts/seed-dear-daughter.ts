@@ -13,17 +13,15 @@ import {
 } from './seed-images'
 
 type Synopsis = NonNullable<Production['synopsis']>
-type ShowStatus = 'open' | 'few-left' | 'sold-out' | 'cancelled'
 
 const productionSlug = 'dear-daughter'
 const productionTitle = 'Dear Daughter,'
-const runLabel = '2026 Season'
 const venue = 'The Black Bean Cafe, Kandy'
-const placeholderStartsAt = '2026-11-14T19:00:00+05:30'
-const placeholderDateLabel = '14 November 2026 at 7:00 pm (Asia/Colombo)'
-const ticketUrl = `https://wa.me/94764508448?text=${encodeURIComponent(
-  `Hi! I would like to reserve seats for ${productionTitle}`,
-)}`
+const placeholderDates = [
+  '2026-11-14T19:00:00+05:30',
+  '2026-11-21T19:00:00+05:30',
+  '2026-11-28T19:00:00+05:30',
+]
 
 const databaseUrl = process.env.DATABASE_URL || 'file:./payload.db'
 
@@ -210,12 +208,17 @@ if (production) {
 
   const posterMedia = await uploadPlaceholder(payload, poster)
   const heroMedia = await uploadPlaceholder(payload, hero)
-  const gallery: { caption?: string; image: number }[] = []
+  const gallery: {
+    caption?: string
+    category: 'on-stage' | 'behind-the-scenes'
+    image: number
+  }[] = []
 
-  for (const image of galleryImages) {
+  for (const [index, image] of galleryImages.entries()) {
     const media = await uploadPlaceholder(payload, image)
     gallery.push({
       caption: image.caption,
+      category: index < 4 ? 'on-stage' : 'behind-the-scenes',
       image: media.id,
     })
   }
@@ -246,6 +249,9 @@ if (production) {
       ],
       poster: posterMedia.id,
       presentedBy: 'A Basement production',
+      shows: placeholderDates.map((startsAt) => ({
+        startsAt: new Date(startsAt).toISOString(),
+      })),
       slug: productionSlug,
       synopsis: richText([
         'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
@@ -253,7 +259,21 @@ if (production) {
         'Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.',
       ]),
       tagline: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
+      ticketing: {
+        columns: 10,
+        paymentMode: 'bank_transfer',
+        selectionMode: 'quantity',
+        stagePosition: 'front',
+        tiers: [
+          {
+            count: 50,
+            name: 'General',
+            price: 2500,
+          },
+        ],
+      },
       title: productionTitle,
+      venue,
       writtenBy: 'Dhisal Kapuge',
     },
     overrideAccess: true,
@@ -262,73 +282,39 @@ if (production) {
   console.log(`Created production: ${productionTitle} (id ${production.id})`)
 }
 
-const runId = await seedRun(payload, production.id)
-
 console.log('')
 console.log('!'.repeat(78))
-console.log('!!  PLACEHOLDER SHOW DATE — SET THE REAL DATE IN BACKSTAGE             !!')
-console.log(`!!  Seeded date: ${placeholderDateLabel}`)
-console.log('!!  The poster cuts off the day of the month, so this date is NOT final.')
+console.log('!!  PLACEHOLDER SHOW DATES — SET THE REAL DATES IN BACKSTAGE            !!')
+for (const startsAt of placeholderDates) {
+  console.log(
+    `!!  ${new Date(startsAt).toLocaleString('en-GB', {
+      timeZone: 'Asia/Colombo',
+    })} (Asia/Colombo)`,
+  )
+}
+console.log(`!!  Venue: ${venue}`)
+console.log(`!!  Ticketing: General · Rs. 2500 · 50 tickets · bank transfer`)
 console.log(
-  `!!  Backstage: http://localhost:3000/backstage/collections/runs/${runId}`,
+  `!!  Backstage: http://localhost:3000/backstage/collections/productions/${production.id}`,
 )
 console.log('!'.repeat(78))
 console.log('')
 
-process.exit(0)
-
-async function seedRun(
-  payload: Payload,
-  productionId: number,
-): Promise<number> {
-  const existingRun = await payload.find({
-    collection: 'runs',
-    depth: 0,
-    limit: 1,
-    overrideAccess: true,
-    where: {
-      and: [
-        {
-          production: {
-            equals: productionId,
-          },
-        },
-        {
-          label: {
-            equals: runLabel,
-          },
-        },
-      ],
-    },
-  })
-
-  if (existingRun.docs.length > 0) {
-    console.log(`Run already exists: ${runLabel}. Skipping.`)
-    return existingRun.docs[0].id
+if (production.shows?.length) {
+  console.log('Seeded show ids:')
+  for (const show of production.shows) {
+    console.log(`  ${show.id} · ${show.startsAt}`)
   }
-
-  const run = await payload.create({
-    collection: 'runs',
-    data: {
-      label: runLabel,
-      production: productionId,
-      shows: [
-        {
-          startsAt: new Date(placeholderStartsAt).toISOString(),
-          status: 'few-left' satisfies ShowStatus,
-          price: 'Rs. 2500',
-          seatsNote: 'Less than 20 seats left',
-          ticketUrl,
-        },
-      ],
-      venue,
-    },
-    overrideAccess: true,
-  })
-
-  console.log(`Created run: ${runLabel} at ${venue}`)
-  return run.id
 }
+
+if (production.ticketing?.tiers?.length) {
+  console.log('Seeded tier ids:')
+  for (const tier of production.ticketing.tiers) {
+    console.log(`  ${tier.id} · ${tier.name} · Rs. ${tier.price} × ${tier.count}`)
+  }
+}
+
+process.exit(0)
 
 async function uploadPlaceholder(
   payload: Payload,

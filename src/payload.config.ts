@@ -7,8 +7,6 @@ import sharp from 'sharp'
 
 import { Media } from './collections/Media'
 import { Productions } from './collections/Productions'
-import { Props } from './collections/Props'
-import { Runs } from './collections/Runs'
 import { Users } from './collections/Users'
 import { SiteSettings } from './globals/SiteSettings'
 
@@ -28,7 +26,7 @@ export default buildConfig({
   routes: {
     admin: '/backstage',
   },
-  collections: [Users, Media, Productions, Runs, Props],
+  collections: [Users, Media, Productions],
   globals: [SiteSettings],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',

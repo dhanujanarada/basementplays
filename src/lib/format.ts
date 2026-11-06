@@ -1,4 +1,4 @@
-import type { ShowStatus } from './types'
+import type { EventShowStatus } from './event-view'
 
 const siteTimeZone = 'Asia/Colombo'
 
@@ -55,7 +55,7 @@ export function formatShowTime(value: string): string {
   return timeFormatter.format(date)
 }
 
-export function formatStatus(status: ShowStatus): string {
+export function formatStatus(status: EventShowStatus): string {
   switch (status) {
     case 'few-left':
       return 'Few left'
@@ -63,21 +63,41 @@ export function formatStatus(status: ShowStatus): string {
       return 'Sold out'
     case 'cancelled':
       return 'Cancelled'
+    case 'past':
+      return 'Past'
     default:
       return 'Open'
   }
 }
 
 export function statusTone(
-  status: ShowStatus,
+  status: EventShowStatus,
 ): 'accent' | 'default' | 'muted' {
   switch (status) {
     case 'few-left':
       return 'accent'
     case 'sold-out':
     case 'cancelled':
+    case 'past':
       return 'muted'
     default:
       return 'default'
   }
+}
+
+function formatRupees(value: number): string {
+  return `Rs. ${value.toLocaleString('en-LK')}`
+}
+
+export function formatPriceFrom(tiers: { price: number }[]): string | null {
+  if (tiers.length === 0) {
+    return null
+  }
+
+  const prices = [...new Set(tiers.map((tier) => tier.price))]
+  const lowest = Math.min(...prices)
+
+  return prices.length > 1
+    ? `From ${formatRupees(lowest)}`
+    : formatRupees(lowest)
 }

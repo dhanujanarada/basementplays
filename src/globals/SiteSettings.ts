@@ -96,5 +96,32 @@ export const SiteSettings: GlobalConfig = {
         },
       ],
     },
+    {
+      name: 'bankTransfer',
+      type: 'group',
+      label: 'Bank transfer',
+      fields: [
+        {
+          name: 'bankName',
+          type: 'text',
+        },
+        {
+          name: 'accountName',
+          type: 'text',
+        },
+        {
+          name: 'accountNumber',
+          type: 'text',
+        },
+        {
+          name: 'branch',
+          type: 'text',
+        },
+        {
+          name: 'instructions',
+          type: 'textarea',
+        },
+      ],
+    },
   ],
 }

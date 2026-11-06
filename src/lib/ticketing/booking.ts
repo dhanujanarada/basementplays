@@ -1,80 +1,41 @@
-import type { Production, Run } from '@/payload-types'
-
-import type { Show } from '@/lib/types'
-
-export type BookableShow = {
-  run: Run
-  show: Show
-}
-
-export function isTicketingEnabled(show: Show | null | undefined): boolean {
-  return show?.ticketingEnabled === true
-}
-
-export function isBookableShow(show: Show | null | undefined): boolean {
-  if (!show) {
-    return false
-  }
-
-  if (show.status === 'sold-out' || show.status === 'cancelled') {
-    return false
-  }
-
-  return Boolean(show.ticketUrl) || isTicketingEnabled(show)
-}
+import { formatLongShowDate } from '@/lib/format'
+import type { EventShow, EventView } from '@/lib/event-view'
 
 // The single source of truth for every Reserve/Book link. With ticketing on,
-// point at the site's booking route; otherwise keep the existing external
-// ticket URL (currently WhatsApp).
+// point at the site's booking route; otherwise use the WhatsApp fallback.
 export function bookingHref(
-  production: Production,
-  show: Show | null | undefined,
+  event: EventView,
+  show: EventShow | null | undefined,
 ): string | null {
-  if (!show) {
+  if (!show || show.status === 'cancelled' || show.status === 'past') {
     return null
   }
 
-  if (show.status === 'sold-out' || show.status === 'cancelled') {
-    return null
-  }
-
-  if (isTicketingEnabled(show)) {
+  if (event.ticketing.active) {
     return show.id
-      ? `/events/${production.slug}/book?show=${show.id}`
+      ? `/events/${event.slug}/book?show=${show.id}`
       : null
   }
 
-  return show.ticketUrl ?? null
+  return whatsAppHref(event, show)
 }
 
-function showTime(show: Show): number {
-  return new Date(show.startsAt).getTime()
-}
+function whatsAppHref(
+  event: EventView,
+  show?: EventShow | null,
+): string | null {
+  const number = event.whatsappNumber?.replace(/\D/g, '')
 
-export function getBookableShows(
-  runs: Run[],
-  now: Date = new Date(),
-): BookableShow[] {
-  const bookable: BookableShow[] = []
-
-  for (const run of runs) {
-    for (const show of run.shows ?? []) {
-      const startsAt = showTime(show)
-
-      if (
-        !show.id ||
-        !isTicketingEnabled(show) ||
-        show.status === 'sold-out' ||
-        show.status === 'cancelled' ||
-        Number.isNaN(startsAt) ||
-        startsAt < now.getTime()
-      ) {
-        continue
-      }
-
-      bookable.push({ run, show })
-    }
+  if (!number) {
+    return null
   }
 
-  return bookable.sort((a, b) => showTime(a.show) - showTime(b.show))
+  const date = show ? ` on ${formatLongShowDate(show.startsAt)}` : ''
+  const message = `Hi ${event.presentedBy ?? 'Basement Plays'}! I would like to book tickets for ${event.title}${date}.`
+
+  return `https://wa.me/${number}?text=${encodeURIComponent(message)}`
+}
+
+export function isExternalBookingHref(href: string): boolean {
+  return href.startsWith('http')
 }

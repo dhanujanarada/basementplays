@@ -4,10 +4,17 @@ import Link from 'next/link'
 import { useCallback, useEffect, useState, useSyncExternalStore } from 'react'
 
 import { formatLongShowDate } from '@/lib/format'
-import { getTicketingClient } from '@/lib/ticketing/client'
+import {
+  getTicketingClient,
+  usingMockTicketing,
+} from '@/lib/ticketing/client'
 import { formatPrice } from '@/lib/ticketing/format'
 import { readOrderToken } from '@/lib/ticketing/order-session'
-import type { PublicOrder, ShowSummary } from '@/lib/ticketing/types'
+import type {
+  OrderSeat,
+  PublicOrder,
+  ShowSummary,
+} from '@/lib/ticketing/types'
 
 import './ticketing.css'
 
@@ -47,6 +54,12 @@ function shortReference(orderID: string): string {
   return orderID.replace(/-/g, '').slice(-6).toUpperCase()
 }
 
+function orderSeatLabel(seat: OrderSeat): string {
+  return seat.label
+    ? `${seat.label} (${seat.tier_name})`
+    : `${seat.tier_name} admission`
+}
+
 const subscribeToOrderToken = () => () => {}
 const getServerOrderToken = () => null
 
@@ -71,6 +84,7 @@ export function OrderConfirmation({
   const [order, setOrder] = useState<PublicOrder | null>(null)
   const [summary, setSummary] = useState<ShowSummary | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [markingPaid, setMarkingPaid] = useState(false)
   const showID = order?.show_id
 
   useEffect(() => {
@@ -166,6 +180,32 @@ export function OrderConfirmation({
     }
   }, [client, orderID, token])
 
+  async function markPaid() {
+    if (!token || !client.devMarkPaid) {
+      return
+    }
+
+    setMarkingPaid(true)
+    try {
+      setOrder(await client.devMarkPaid(orderID, token))
+      setError(null)
+    } catch (nextError) {
+      setError(
+        nextError instanceof Error
+          ? nextError.message
+          : 'We could not mark this order paid.',
+      )
+    } finally {
+      setMarkingPaid(false)
+    }
+  }
+
+  const canMarkPaid =
+    usingMockTicketing &&
+    Boolean(client.devMarkPaid) &&
+    order?.status === 'pending' &&
+    order.payment_method === 'bank_transfer'
+
   return (
     <div className="tk">
       <div className="tk-layout">
@@ -223,14 +263,7 @@ export function OrderConfirmation({
                   </div>
                   <div>
                     <dt>Seats</dt>
-                    <dd>
-                      {order.seats
-                        .map(
-                          (seat) =>
-                            `${seat.label ?? seat.code} (${seat.tier_name})`,
-                        )
-                        .join(', ')}
-                    </dd>
+                    <dd>{order.seats.map(orderSeatLabel).join(', ')}</dd>
                   </div>
                   <div>
                     <dt>Total</dt>
@@ -242,9 +275,62 @@ export function OrderConfirmation({
                   </div>
                 </dl>
 
+                {order.payment_method === 'bank_transfer' &&
+                order.bank_transfer ? (
+                  <div className="tk-bank">
+                    <h3>Pay by bank transfer</h3>
+                    <p className="tk-muted">
+                      Transfer {formatPrice(order.total_cents, order.currency)}{' '}
+                      using the reference{' '}
+                      <strong>{shortReference(order.order_id)}</strong>.
+                    </p>
+                    <dl className="tk-details">
+                      <div>
+                        <dt>Bank</dt>
+                        <dd>{order.bank_transfer.bank_name}</dd>
+                      </div>
+                      <div>
+                        <dt>Account name</dt>
+                        <dd>{order.bank_transfer.account_name}</dd>
+                      </div>
+                      <div>
+                        <dt>Account number</dt>
+                        <dd>{order.bank_transfer.account_number}</dd>
+                      </div>
+                      <div>
+                        <dt>Branch</dt>
+                        <dd>{order.bank_transfer.branch}</dd>
+                      </div>
+                      <div>
+                        <dt>Pay by</dt>
+                        <dd>{formatLongShowDate(order.expires_at)}</dd>
+                      </div>
+                    </dl>
+                    {order.bank_transfer.instructions ? (
+                      <p className="tk-muted">
+                        {order.bank_transfer.instructions}
+                      </p>
+                    ) : null}
+                    {canMarkPaid ? (
+                      <div className="tk-actions">
+                        <button
+                          className="tk-button tk-button--secondary"
+                          disabled={markingPaid}
+                          onClick={() => void markPaid()}
+                          type="button"
+                        >
+                          {markingPaid
+                            ? 'Marking paid…'
+                            : 'Mark paid (dev)'}
+                        </button>
+                      </div>
+                    ) : null}
+                  </div>
+                ) : null}
+
                 {order.status === 'pending' ? (
                   <p className="tk-notice">
-                    Your seats are reserved. This page refreshes automatically
+                    Your order is reserved. This page refreshes automatically
                     while we wait for payment confirmation.
                   </p>
                 ) : null}
@@ -277,17 +363,38 @@ export function OrderConfirmation({
                           (candidate) => candidate.code === ticket.seat_code,
                         )
 
+                        let href: string | null = null
+                        try {
+                          href = client.ticketHref(order, ticket)
+                        } catch {
+                          // The link appears as soon as the provider returns it.
+                        }
+
+                        const label =
+                          seat?.label ??
+                          (seat
+                            ? `${seat.tier_name} admission`
+                            : ticket.seat_code)
+
                         return (
                           <li key={ticket.ticket_id}>
-                            <Link href={client.ticketHref(order, ticket)}>
-                              <span>
-                                <strong>
-                                  {seat?.label ?? ticket.seat_code}
-                                </strong>
-                                <span>{seat?.tier_name}</span>
+                            {href ? (
+                              <Link href={href}>
+                                <span>
+                                  <strong>{label}</strong>
+                                  <span>{seat?.tier_name}</span>
+                                </span>
+                                <span>View ticket →</span>
+                              </Link>
+                            ) : (
+                              <span className="tk-picker-row">
+                                <span>
+                                  <strong>{label}</strong>
+                                  <span>{seat?.tier_name}</span>
+                                </span>
+                                <span>Link pending</span>
                               </span>
-                              <span>View ticket →</span>
-                            </Link>
+                            )}
                           </li>
                         )
                       })}

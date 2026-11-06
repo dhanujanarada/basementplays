@@ -4,7 +4,7 @@ import { cache } from 'react'
 
 import { OrderConfirmation } from '@/components/ticketing/OrderConfirmation'
 import { designs, plainDesign } from '@/designs'
-import { getProduction, getRunsForProduction } from '@/lib/payload'
+import { getEventView } from '@/lib/payload'
 
 export const dynamic = 'force-dynamic'
 
@@ -13,17 +13,17 @@ type ConfirmationPageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>
 }
 
-const getProductionBySlug = cache(getProduction)
+const getEventBySlug = cache(getEventView)
 
 export async function generateMetadata({
   params,
 }: ConfirmationPageProps): Promise<Metadata> {
   const { slug } = await params
-  const production = await getProductionBySlug(slug)
+  const event = await getEventBySlug(slug)
 
   return {
-    title: production
-      ? `Booking confirmation · ${production.title}`
+    title: event
+      ? `Booking confirmation · ${event.title}`
       : 'Booking confirmation',
   }
 }
@@ -35,25 +35,24 @@ export default async function ConfirmationPage({
   const { slug } = await params
   const query = await searchParams
   const orderID = typeof query.order === 'string' ? query.order : null
-  const production = await getProductionBySlug(slug)
+  const event = await getEventBySlug(slug)
 
-  if (!production) {
+  if (!event) {
     notFound()
   }
   if (!orderID) {
     notFound()
   }
 
-  const runs = await getRunsForProduction(production.id)
-  const design = designs[production.slug] ?? plainDesign
+  const design = designs[event.slug] ?? plainDesign
   const { Shell } = design
 
   return (
-    <Shell production={production} runs={runs}>
+    <Shell event={event}>
       <OrderConfirmation
         orderID={orderID}
-        productionSlug={production.slug}
-        productionTitle={production.title}
+        productionSlug={event.slug}
+        productionTitle={event.title}
       />
     </Shell>
   )

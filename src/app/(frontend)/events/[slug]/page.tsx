@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation'
 import { cache } from 'react'
 
 import { designs, plainDesign } from '@/designs'
-import { getProduction, getRunsForProduction } from '@/lib/payload'
+import { getEventView } from '@/lib/payload'
 
 export const dynamic = 'force-dynamic'
 
@@ -11,41 +11,40 @@ type EventPageProps = {
   params: Promise<{ slug: string }>
 }
 
-const getProductionBySlug = cache(getProduction)
+const getEventBySlug = cache(getEventView)
 
 export async function generateMetadata({
   params,
 }: EventPageProps): Promise<Metadata> {
   const { slug } = await params
-  const production = await getProductionBySlug(slug)
+  const event = await getEventBySlug(slug)
 
-  if (!production) {
+  if (!event) {
     return {
       title: 'Event not found',
     }
   }
 
   return {
-    description: production.tagline ?? undefined,
-    title: production.title,
+    description: event.tagline ?? undefined,
+    title: event.title,
   }
 }
 
 export default async function EventPage({ params }: EventPageProps) {
   const { slug } = await params
-  const production = await getProductionBySlug(slug)
+  const event = await getEventBySlug(slug)
 
-  if (!production) {
+  if (!event) {
     notFound()
   }
 
-  const runs = await getRunsForProduction(production.id)
-  const design = designs[production.slug] ?? plainDesign
+  const design = designs[event.slug] ?? plainDesign
   const { Page, Shell } = design
 
   return (
-    <Shell production={production} runs={runs}>
-      <Page production={production} runs={runs} />
+    <Shell event={event}>
+      <Page event={event} />
     </Shell>
   )
 }

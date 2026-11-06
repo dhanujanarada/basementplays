@@ -5,6 +5,10 @@ import { slugify, uniqueSlug } from './hooks/slug'
 
 export const Productions: CollectionConfig = {
   slug: 'productions',
+  labels: {
+    singular: 'Event',
+    plural: 'Events',
+  },
   admin: {
     group: 'Content',
     useAsTitle: 'title',
@@ -70,12 +74,9 @@ export const Productions: CollectionConfig = {
               type: 'text',
             },
             {
-              name: 'synopsis',
-              type: 'richText',
-            },
-            {
               name: 'presentedBy',
               type: 'text',
+              defaultValue: 'A Basement production',
               admin: {
                 description: 'e.g. A Basement production',
               },
@@ -87,6 +88,10 @@ export const Productions: CollectionConfig = {
             {
               name: 'directedBy',
               type: 'text',
+            },
+            {
+              name: 'synopsis',
+              type: 'richText',
             },
             {
               name: 'poster',
@@ -102,33 +107,157 @@ export const Productions: CollectionConfig = {
           ],
         },
         {
-          label: 'Partners',
+          label: 'Shows & tickets',
           fields: [
             {
-              name: 'partners',
-              type: 'array',
+              name: 'venue',
+              type: 'text',
               admin: {
                 description:
-                  'Optional. Logos may be omitted; the public design shows the partner name as text.',
+                  'Default venue for every show. A show can override it.',
               },
+            },
+            {
+              name: 'shows',
+              type: 'array',
               fields: [
                 {
-                  name: 'name',
-                  type: 'text',
+                  name: 'startsAt',
+                  type: 'date',
                   required: true,
-                },
-                {
-                  name: 'role',
-                  type: 'text',
                   admin: {
-                    description:
-                      'e.g. Location Partner, Promotional Partner',
+                    date: {
+                      pickerAppearance: 'dayAndTime',
+                    },
                   },
                 },
                 {
-                  name: 'logo',
-                  type: 'upload',
-                  relationTo: 'media',
+                  name: 'venue',
+                  type: 'text',
+                  admin: {
+                    description: 'Optional. Overrides the event venue.',
+                  },
+                },
+                {
+                  name: 'cancelled',
+                  type: 'checkbox',
+                  defaultValue: false,
+                },
+              ],
+            },
+            {
+              type: 'group',
+              name: 'ticketing',
+              label: 'Ticketing',
+              fields: [
+                {
+                  name: 'paymentMode',
+                  type: 'select',
+                  required: true,
+                  defaultValue: 'bank_transfer',
+                  options: [
+                    {
+                      label: 'Bank transfer',
+                      value: 'bank_transfer',
+                    },
+                    {
+                      label: 'Online (PayHere sandbox)',
+                      value: 'online',
+                    },
+                    {
+                      label: 'Off (WhatsApp fallback)',
+                      value: 'off',
+                    },
+                  ],
+                },
+                {
+                  name: 'selectionMode',
+                  type: 'select',
+                  required: true,
+                  defaultValue: 'quantity',
+                  options: [
+                    {
+                      label: 'Quantity (tier boxes)',
+                      value: 'quantity',
+                    },
+                    {
+                      label: 'Seats (seat map)',
+                      value: 'seats',
+                    },
+                  ],
+                },
+                {
+                  name: 'stagePosition',
+                  type: 'select',
+                  required: true,
+                  defaultValue: 'front',
+                  options: [
+                    {
+                      label: 'Front (above the tiers)',
+                      value: 'front',
+                    },
+                    {
+                      label: 'Back (below the tiers)',
+                      value: 'back',
+                    },
+                    {
+                      label: 'None',
+                      value: 'none',
+                    },
+                  ],
+                },
+                {
+                  name: 'numbering',
+                  type: 'checkbox',
+                  defaultValue: false,
+                  admin: {
+                    condition: (data) =>
+                      data?.ticketing?.selectionMode === 'seats',
+                    description: 'Number seats in seats mode.',
+                  },
+                },
+                {
+                  name: 'columns',
+                  type: 'number',
+                  defaultValue: 10,
+                  min: 1,
+                  admin: {
+                    condition: (data) =>
+                      data?.ticketing?.selectionMode === 'seats',
+                    description: 'Seat grid width in seats mode.',
+                  },
+                },
+                {
+                  name: 'tiers',
+                  type: 'array',
+                  required: true,
+                  minRows: 1,
+                  admin: {
+                    description:
+                      'At least one tier. The order here is stage order: first is nearest the stage.',
+                  },
+                  fields: [
+                    {
+                      name: 'name',
+                      type: 'text',
+                      required: true,
+                    },
+                    {
+                      name: 'price',
+                      type: 'number',
+                      required: true,
+                      min: 0,
+                      admin: {
+                        description: 'Whole rupees, e.g. 2500.',
+                      },
+                    },
+                    {
+                      name: 'count',
+                      type: 'number',
+                      required: true,
+                      min: 1,
+                    },
+                  ],
                 },
               ],
             },
@@ -172,6 +301,34 @@ export const Productions: CollectionConfig = {
                 },
               ],
             },
+            {
+              name: 'partners',
+              type: 'array',
+              admin: {
+                description:
+                  'Optional. Logos may be omitted; the public design shows the partner name as text.',
+              },
+              fields: [
+                {
+                  name: 'name',
+                  type: 'text',
+                  required: true,
+                },
+                {
+                  name: 'role',
+                  type: 'text',
+                  admin: {
+                    description:
+                      'e.g. Location Partner, Promotional Partner',
+                  },
+                },
+                {
+                  name: 'logo',
+                  type: 'upload',
+                  relationTo: 'media',
+                },
+              ],
+            },
           ],
         },
         {
@@ -194,6 +351,21 @@ export const Productions: CollectionConfig = {
                 {
                   name: 'caption',
                   type: 'text',
+                },
+                {
+                  name: 'category',
+                  type: 'select',
+                  defaultValue: 'on-stage',
+                  options: [
+                    {
+                      label: 'On stage',
+                      value: 'on-stage',
+                    },
+                    {
+                      label: 'Behind the scenes',
+                      value: 'behind-the-scenes',
+                    },
+                  ],
                 },
               ],
             },

@@ -3,9 +3,9 @@ import path from 'node:path'
 
 import sharp from 'sharp'
 
-export type ImageKind = 'poster' | 'hero' | 'gallery'
+type ImageKind = 'poster' | 'hero' | 'gallery'
 
-export type ImageMotif = 'crown' | 'sun' | 'stage' | 'candid'
+type ImageMotif = 'crown' | 'sun' | 'stage' | 'candid'
 
 export type PlaceholderImage = {
   accent: string

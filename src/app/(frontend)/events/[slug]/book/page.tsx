@@ -5,8 +5,8 @@ import { cache } from 'react'
 import { BookingShowPicker } from '@/components/ticketing/BookingShowPicker'
 import { DefaultBooking } from '@/components/ticketing/DefaultBooking'
 import { designs, plainDesign } from '@/designs'
-import { getProduction, getRunsForProduction } from '@/lib/payload'
-import { getBookableShows } from '@/lib/ticketing/booking'
+import { getBookableShows } from '@/lib/event-view'
+import { getEventView } from '@/lib/payload'
 
 export const dynamic = 'force-dynamic'
 
@@ -15,16 +15,16 @@ type BookingPageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>
 }
 
-const getProductionBySlug = cache(getProduction)
+const getEventBySlug = cache(getEventView)
 
 export async function generateMetadata({
   params,
 }: BookingPageProps): Promise<Metadata> {
   const { slug } = await params
-  const production = await getProductionBySlug(slug)
+  const event = await getEventBySlug(slug)
 
   return {
-    title: production ? `Reserve seats · ${production.title}` : 'Booking',
+    title: event ? `Reserve seats · ${event.title}` : 'Booking',
   }
 }
 
@@ -34,36 +34,30 @@ export default async function BookingPage({
 }: BookingPageProps) {
   const { slug } = await params
   const query = await searchParams
-  const production = await getProductionBySlug(slug)
+  const event = await getEventBySlug(slug)
 
-  if (!production) {
+  if (!event) {
     notFound()
   }
 
-  const runs = await getRunsForProduction(production.id)
-  const bookable = getBookableShows(runs)
+  const bookable = getBookableShows(event)
   const requested = typeof query.show === 'string' ? query.show : undefined
   const selected = requested
-    ? (bookable.find((entry) => entry.show.id === requested) ?? null)
+    ? (bookable.find((show) => show.id === requested) ?? null)
     : bookable.length === 1
       ? bookable[0]
       : null
 
-  const design = designs[production.slug] ?? plainDesign
+  const design = designs[event.slug] ?? plainDesign
   const { Shell } = design
   const Booking = design.Booking ?? DefaultBooking
 
   return (
-    <Shell production={production} runs={runs}>
+    <Shell event={event}>
       {selected ? (
-        <Booking
-          production={production}
-          run={selected.run}
-          runs={runs}
-          show={selected.show}
-        />
+        <Booking event={event} show={selected} />
       ) : (
-        <BookingShowPicker production={production} shows={bookable} />
+        <BookingShowPicker event={event} shows={bookable} />
       )}
     </Shell>
   )

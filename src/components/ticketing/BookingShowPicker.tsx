@@ -1,19 +1,19 @@
 import Link from 'next/link'
 
 import { Container } from '@/components/ui/Container'
+import type { EventShow, EventView } from '@/lib/event-view'
+import { showSeasonLabel } from '@/lib/event-view'
 import { formatShowDate } from '@/lib/format'
-import type { BookableShow } from '@/lib/ticketing/booking'
-import type { Production } from '@/payload-types'
 
 import './ticketing.css'
 
 type BookingShowPickerProps = {
-  production: Production
-  shows: BookableShow[]
+  event: EventView
+  shows: EventShow[]
 }
 
 export function BookingShowPicker({
-  production,
+  event,
   shows,
 }: BookingShowPickerProps) {
   return (
@@ -21,7 +21,7 @@ export function BookingShowPicker({
       <header className="tk-booking-header">
         <Container>
           <p className="tk-eyebrow">Reserve seats</p>
-          <h1>{production.title}</h1>
+          <h1>{event.title}</h1>
           <p>Choose a performance to see available seats.</p>
         </Container>
       </header>
@@ -38,15 +38,13 @@ export function BookingShowPicker({
               </p>
             ) : (
               <ul className="tk-picker">
-                {shows.map(({ run, show }) => (
+                {shows.map((show) => (
                   <li key={show.id}>
-                    <Link
-                      href={`/events/${production.slug}/book?show=${show.id}`}
-                    >
+                    <Link href={`/events/${event.slug}/book?show=${show.id}`}>
                       <span>
                         <strong>{formatShowDate(show.startsAt)}</strong>
                         <span>
-                          {[run.label, run.venue]
+                          {[showSeasonLabel(show.startsAt), show.venue]
                             .filter(Boolean)
                             .join(' · ')}
                         </span>

@@ -1,13 +1,7 @@
 import { EventCard } from '@/components/EventCard'
 import { Container } from '@/components/ui/Container'
-import type { Production } from '@/payload-types'
-import {
-  getAllProductions,
-  getRunsForProduction,
-  getSiteSettings,
-} from '@/lib/payload'
-import { getUpcomingShow } from '@/lib/shows'
-import type { ShowEntry } from '@/lib/types'
+import { getNextShow, type EventShow, type EventView } from '@/lib/event-view'
+import { getAllEventViews, getSiteSettings } from '@/lib/payload'
 
 export const dynamic = 'force-dynamic'
 
@@ -16,31 +10,25 @@ export const metadata = {
 }
 
 type ProductionListing = {
-  nextShow: ShowEntry | null
-  production: Production
+  event: EventView
+  nextShow: EventShow | null
 }
 
 export default async function EventsPage() {
-  const [productions, settings] = await Promise.all([
-    getAllProductions(),
+  const [events, settings] = await Promise.all([
+    getAllEventViews(),
     getSiteSettings(),
   ])
-  const listings: ProductionListing[] = await Promise.all(
-    productions.map(async (production) => {
-      const runs = await getRunsForProduction(production.id)
-
-      return {
-        nextShow: getUpcomingShow(runs),
-        production,
-      }
-    }),
-  )
+  const listings: ProductionListing[] = events.map((event) => ({
+    event,
+    nextShow: getNextShow(event),
+  }))
 
   listings.sort((a, b) => {
     if (a.nextShow && b.nextShow) {
       return (
-        new Date(a.nextShow.show.startsAt).getTime() -
-        new Date(b.nextShow.show.startsAt).getTime()
+        new Date(a.nextShow.startsAt).getTime() -
+        new Date(b.nextShow.startsAt).getTime()
       )
     }
 
@@ -52,7 +40,7 @@ export default async function EventsPage() {
       return 1
     }
 
-    return a.production.title.localeCompare(b.production.title)
+    return a.event.title.localeCompare(b.event.title)
   })
 
   const groupName = settings.groupName || 'Basement Plays'
@@ -81,12 +69,12 @@ export default async function EventsPage() {
 
       {listings.length > 0 ? (
         <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {listings.map(({ nextShow, production }) => (
+          {listings.map(({ event, nextShow }) => (
             <EventCard
+              event={event}
               groupName={groupName}
-              key={production.id}
+              key={event.id}
               nextShow={nextShow}
-              production={production}
             />
           ))}
         </div>

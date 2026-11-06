@@ -2,28 +2,27 @@ import Image from 'next/image'
 import Link from 'next/link'
 
 import { Badge } from '@/components/ui/Badge'
-import type { Production } from '@/payload-types'
+import type { EventShow, EventView } from '@/lib/event-view'
 import { formatShowDate, formatStatus, statusTone } from '@/lib/format'
 import { mediaImage } from '@/lib/media'
-import type { ShowEntry } from '@/lib/types'
 
 type EventCardProps = {
+  event: EventView
   groupName?: string
-  nextShow: ShowEntry | null
-  production: Production
+  nextShow: EventShow | null
 }
 
 export function EventCard({
+  event,
   groupName = 'Basement Plays',
   nextShow,
-  production,
 }: EventCardProps) {
-  const poster = mediaImage(production.poster, 'card')
+  const poster = mediaImage(event.poster, 'card')
 
   return (
     <Link
       className="group flex flex-col overflow-hidden rounded-sm border border-[var(--border)] bg-[var(--surface)] transition hover:border-[var(--accent)]/70 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--accent)]"
-      href={`/events/${production.slug}`}
+      href={`/events/${event.slug}`}
     >
       <div className="relative aspect-[2/3] overflow-hidden bg-[var(--surface-raised)]">
         {poster ? (
@@ -40,15 +39,15 @@ export function EventCard({
               {groupName}
             </span>
             <span className="font-display text-3xl leading-[0.95] text-[var(--text)]">
-              {production.title}
+              {event.title}
             </span>
           </div>
         )}
 
         <div className="absolute left-4 top-4">
           {nextShow ? (
-            <Badge tone={statusTone(nextShow.show.status)}>
-              {formatStatus(nextShow.show.status)}
+            <Badge tone={statusTone(nextShow.status)}>
+              {formatStatus(nextShow.status)}
             </Badge>
           ) : (
             <Badge tone="muted">No upcoming shows</Badge>
@@ -58,11 +57,11 @@ export function EventCard({
 
       <div className="flex flex-1 flex-col gap-3 p-5">
         <h2 className="font-display text-2xl leading-tight text-[var(--text)] transition group-hover:text-[var(--accent)]">
-          {production.title}
+          {event.title}
         </h2>
         <p className="mt-auto text-sm text-[var(--muted)]">
           {nextShow
-            ? formatShowDate(nextShow.show.startsAt)
+            ? formatShowDate(nextShow.startsAt)
             : 'Check back for future dates'}
         </p>
       </div>

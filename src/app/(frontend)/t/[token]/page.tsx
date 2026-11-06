@@ -2,11 +2,10 @@ import type { Metadata } from 'next'
 import { headers } from 'next/headers'
 import { notFound } from 'next/navigation'
 import { cache } from 'react'
-import QRCode from 'qrcode'
 
 import { TicketView } from '@/components/ticketing/TicketView'
 import { designs, plainDesign } from '@/designs'
-import { getProduction, getRunsForProduction } from '@/lib/payload'
+import { getEventView } from '@/lib/payload'
 import { getTicketingClient } from '@/lib/ticketing/client'
 
 export const dynamic = 'force-dynamic'
@@ -15,7 +14,7 @@ type TicketPageProps = {
   params: Promise<{ token: string }>
 }
 
-const getProductionBySlug = cache(getProduction)
+const getEventBySlug = cache(getEventView)
 
 async function loadTicket(token: string) {
   try {
@@ -50,16 +49,15 @@ export default async function TicketPage({ params }: TicketPageProps) {
     notFound()
   }
 
-  const production = ticket.production_slug
-    ? await getProductionBySlug(ticket.production_slug)
+  const event = ticket.production_slug
+    ? await getEventBySlug(ticket.production_slug)
     : null
 
-  if (!production) {
+  if (!event) {
     notFound()
   }
 
-  const runs = await getRunsForProduction(production.id)
-  const design = designs[production.slug] ?? plainDesign
+  const design = designs[event.slug] ?? plainDesign
   const { Shell } = design
 
   const requestHeaders = await headers()
@@ -77,6 +75,7 @@ export default async function TicketPage({ params }: TicketPageProps) {
 
   let qrSvg: string | null = null
   try {
+    const { default: QRCode } = await import('qrcode')
     qrSvg = await QRCode.toString(qrUrl, {
       color: {
         dark: '#241f19',
@@ -92,7 +91,7 @@ export default async function TicketPage({ params }: TicketPageProps) {
   }
 
   return (
-    <Shell production={production} runs={runs}>
+    <Shell event={event}>
       <TicketView qrSvg={qrSvg} ticket={ticket} />
     </Shell>
   )

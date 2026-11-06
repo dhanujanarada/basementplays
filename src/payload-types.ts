@@ -70,8 +70,6 @@ export interface Config {
     users: User;
     media: Media;
     productions: Production;
-    runs: Run;
-    props: Prop;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -82,8 +80,6 @@ export interface Config {
     users: UsersSelect<false> | UsersSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     productions: ProductionsSelect<false> | ProductionsSelect<true>;
-    runs: RunsSelect<false> | RunsSelect<true>;
-    props: PropsSelect<false> | PropsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -211,6 +207,12 @@ export interface Production {
    */
   slug: string;
   tagline?: string | null;
+  /**
+   * e.g. A Basement production
+   */
+  presentedBy?: string | null;
+  writtenBy?: string | null;
+  directedBy?: string | null;
   synopsis?: {
     root: {
       type: string;
@@ -226,28 +228,48 @@ export interface Production {
     };
     [k: string]: unknown;
   } | null;
-  /**
-   * e.g. A Basement production
-   */
-  presentedBy?: string | null;
-  writtenBy?: string | null;
-  directedBy?: string | null;
   poster: number | Media;
   heroImage?: (number | null) | Media;
   /**
-   * Optional. Logos may be omitted; the public design shows the partner name as text.
+   * Default venue for every show. A show can override it.
    */
-  partners?:
+  venue?: string | null;
+  shows?:
     | {
-        name: string;
+        startsAt: string;
         /**
-         * e.g. Location Partner, Promotional Partner
+         * Optional. Overrides the event venue.
          */
-        role?: string | null;
-        logo?: (number | null) | Media;
+        venue?: string | null;
+        cancelled?: boolean | null;
         id?: string | null;
       }[]
     | null;
+  ticketing: {
+    paymentMode: 'bank_transfer' | 'online' | 'off';
+    selectionMode: 'quantity' | 'seats';
+    stagePosition: 'front' | 'back' | 'none';
+    /**
+     * Number seats in seats mode.
+     */
+    numbering?: boolean | null;
+    /**
+     * Seat grid width in seats mode.
+     */
+    columns?: number | null;
+    /**
+     * At least one tier. The order here is stage order: first is nearest the stage.
+     */
+    tiers: {
+      name: string;
+      /**
+       * Whole rupees, e.g. 2500.
+       */
+      price: number;
+      count: number;
+      id?: string | null;
+    }[];
+  };
   cast?:
     | {
         name: string;
@@ -264,65 +286,30 @@ export interface Production {
       }[]
     | null;
   /**
+   * Optional. Logos may be omitted; the public design shows the partner name as text.
+   */
+  partners?:
+    | {
+        name: string;
+        /**
+         * e.g. Location Partner, Promotional Partner
+         */
+        role?: string | null;
+        logo?: (number | null) | Media;
+        id?: string | null;
+      }[]
+    | null;
+  /**
    * Show photos. Add a caption for each image where useful.
    */
   gallery?:
     | {
         image: number | Media;
         caption?: string | null;
+        category?: ('on-stage' | 'behind-the-scenes') | null;
         id?: string | null;
       }[]
     | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "runs".
- */
-export interface Run {
-  id: number;
-  production: number | Production;
-  label: string;
-  venue?: string | null;
-  shows?:
-    | {
-        startsAt: string;
-        /**
-         * Manual status. While ticketing is enabled, availability comes from the ticketing service; use this only to force sold out or cancelled.
-         */
-        status: 'open' | 'few-left' | 'sold-out' | 'cancelled';
-        /**
-         * Use the ticketing service for this show. Prices, status, and seats remaining then come from its seat plan; the price and seats note below are ignored.
-         */
-        ticketingEnabled?: boolean | null;
-        /**
-         * e.g. Rs. 2500. Ignored while ticketing is enabled.
-         */
-        price: string;
-        /**
-         * Optional. e.g. Less than 20 seats left. Ignored while ticketing is enabled.
-         */
-        seatsNote?: string | null;
-        ticketUrl?: string | null;
-        id?: string | null;
-      }[]
-    | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "props".
- */
-export interface Prop {
-  id: number;
-  production: number | Production;
-  name: string;
-  scene?: string | null;
-  status: 'needed' | 'sourced' | 'ready' | 'returned';
-  assignedTo?: string | null;
-  notes?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -361,14 +348,6 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'productions';
         value: number | Production;
-      } | null)
-    | ({
-        relationTo: 'runs';
-        value: number | Run;
-      } | null)
-    | ({
-        relationTo: 'props';
-        value: number | Prop;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -496,19 +475,37 @@ export interface ProductionsSelect<T extends boolean = true> {
   title?: T;
   slug?: T;
   tagline?: T;
-  synopsis?: T;
   presentedBy?: T;
   writtenBy?: T;
   directedBy?: T;
+  synopsis?: T;
   poster?: T;
   heroImage?: T;
-  partners?:
+  venue?: T;
+  shows?:
     | T
     | {
-        name?: T;
-        role?: T;
-        logo?: T;
+        startsAt?: T;
+        venue?: T;
+        cancelled?: T;
         id?: T;
+      };
+  ticketing?:
+    | T
+    | {
+        paymentMode?: T;
+        selectionMode?: T;
+        stagePosition?: T;
+        numbering?: T;
+        columns?: T;
+        tiers?:
+          | T
+          | {
+              name?: T;
+              price?: T;
+              count?: T;
+              id?: T;
+            };
       };
   cast?:
     | T
@@ -525,49 +522,22 @@ export interface ProductionsSelect<T extends boolean = true> {
         role?: T;
         id?: T;
       };
+  partners?:
+    | T
+    | {
+        name?: T;
+        role?: T;
+        logo?: T;
+        id?: T;
+      };
   gallery?:
     | T
     | {
         image?: T;
         caption?: T;
+        category?: T;
         id?: T;
       };
-  updatedAt?: T;
-  createdAt?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "runs_select".
- */
-export interface RunsSelect<T extends boolean = true> {
-  production?: T;
-  label?: T;
-  venue?: T;
-  shows?:
-    | T
-    | {
-        startsAt?: T;
-        status?: T;
-        ticketingEnabled?: T;
-        price?: T;
-        seatsNote?: T;
-        ticketUrl?: T;
-        id?: T;
-      };
-  updatedAt?: T;
-  createdAt?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "props_select".
- */
-export interface PropsSelect<T extends boolean = true> {
-  production?: T;
-  name?: T;
-  scene?: T;
-  status?: T;
-  assignedTo?: T;
-  notes?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -650,6 +620,13 @@ export interface SiteSetting {
         id?: string | null;
       }[]
     | null;
+  bankTransfer?: {
+    bankName?: string | null;
+    accountName?: string | null;
+    accountNumber?: string | null;
+    branch?: string | null;
+    instructions?: string | null;
+  };
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -673,6 +650,15 @@ export interface SiteSettingsSelect<T extends boolean = true> {
         platform?: T;
         url?: T;
         id?: T;
+      };
+  bankTransfer?:
+    | T
+    | {
+        bankName?: T;
+        accountName?: T;
+        accountNumber?: T;
+        branch?: T;
+        instructions?: T;
       };
   updatedAt?: T;
   createdAt?: T;
