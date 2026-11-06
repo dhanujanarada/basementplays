@@ -3,15 +3,16 @@
 ## 1. Goal
 A public website for a theatre group with a built-in CMS. Each production gets its own
 "sub-site" style page with a custom look, show dates, cast/crew, and a photo gallery.
-The admin panel manages content and per-production prop tracking.
+The admin panel manages content and one Events editor that also holds each event's show
+dates, ticketing settings, and bank-transfer details.
 
 The admin panel is called **Backstage**. "Backstage" refers only to the admin panel —
 never to public photo sections, gallery categories, or content types. Backstage holds
 **content only**; each production's presentation lives in its own code component under
-`src/designs/<slug>/`. Payments come later (out of scope for now).
+`src/designs/<slug>/`. Ticketing and payments are specified in `TICKETING.md`.
 
-**Immediate target:** a demo-ready basic site (listing + event pages + Backstage) by
-tomorrow.
+**Immediate target:** a demo-ready basic site (listing + event pages + Backstage) with
+the mock-backed booking flow.
 
 ## 2. Tech Stack
 - Next.js (App Router) + TypeScript
@@ -39,45 +40,56 @@ colors, fonts, layout keys, or other presentation settings.
 
 ## 4. Data Model (Payload collections and globals)
 
-### Productions
-A play (the creative work), which may be staged more than once.
+### Events (collection slug `productions`)
+One production/event. The admin label is **Events**; the slug stays `productions`.
+Admin UI tabs: Details, Shows & tickets, People, Gallery.
+
+**Details**
 - `title` (text, required)
 - `slug` (text, unique, auto-generated from title)
 - `tagline` (text)
 - `synopsis` (rich text)
-- `presentedBy` (text)
+- `presentedBy` (text, default "A Basement production")
 - `writtenBy` (text)
 - `directedBy` (text)
 - `poster` (upload -> Media, required)
-- `heroImage` (upload -> Media)
-- `partners` (optional array): `name` (text, required), `role` (text, e.g.
-  "Location Partner" or "Promotional Partner"), `logo` (optional upload -> Media)
+- `heroImage` (upload -> Media, optional; kept from the existing design)
+
+**Shows & tickets**
+- `venue` (text): default venue for all this event's shows.
+- `shows` (array):
+  - `startsAt` (date+time, required)
+  - `venue` (text, optional override)
+  - `cancelled` (checkbox)
+- `ticketing` (group):
+  - `paymentMode` (select: bank_transfer [default], online, off)
+  - `selectionMode` (select: quantity [default], seats)
+  - `stagePosition` (select: front [default], back, none)
+  - `numbering` (checkbox; shown only in seats mode)
+  - `columns` (number, default 10; shown only in seats mode)
+  - `tiers` (array): `name` (text, required), `price` (number, whole rupees,
+    required), `count` (number, required, min 1). At least one tier.
+
+**People**
 - `cast` (array): `name`, `role`, `photo` (optional upload)
 - `crew` (array): `name`, `role`
-- `gallery` (array): `image` (upload -> Media, required), `caption` (text, optional)
+- `partners` (array): `name` (required), `role`, `logo` (optional upload)
 
-There is no `theme` group, no `layoutKey`, no `backstage` array, no gallery
-`category`, and no `testimonials` field. Do not add them back.
+**Gallery**
+- `gallery` (array): `image` (upload -> Media, required), `caption` (text),
+  `category` (select: On stage, Behind the scenes)
 
-Admin UI tabs: Details, Partners, People, Gallery.
-
-### Runs
-A season of a production, with its own dates and venue.
-- `production` (relationship -> Productions, required)
-- `label` (text, e.g. "2026 Season")
-- `venue` (text)
-- `shows` (array): `startsAt` (date+time), `status` (select: open, few-left,
-  sold-out, cancelled), `price` (text), `seatsNote` (text, optional),
-  `ticketUrl` (text, optional)
-
-### Props
-Per-production prop tracking, an internal Backstage tool (not shown publicly).
-- `production` (relationship -> Productions, required)
-- `name` (text, required)
-- `scene` (text)
-- `status` (select: needed, sourced, ready, returned)
-- `assignedTo` (text)
-- `notes` (textarea)
+Rules:
+- Show array row ids are the show ids used in `?show=` and in the Go service. Tier
+  array row ids are the tier ids. Both are stable across rename and reorder.
+- Do not add `ticketingEnabled`, `seatPlanKey`, `ticketUrl`, `price` text, `seatsNote`,
+  or a manual `status` field. Ticketing state and statuses are derived:
+  - active iff `paymentMode != off` and at least one tier has `price > 0` and
+    `count > 0`;
+  - cancelled from the checkbox, past from the date, sold out/few left from Go
+    availability when ticketing is active.
+- There is no `theme` group, no `layoutKey`, no `backstage` array, no testimonials.
+  Do not add them back.
 
 ### Media
 Payload upload collection with required `alt` text. Generate resized variants
@@ -86,8 +98,7 @@ Payload upload collection with required `alt` text. Generate resized variants
 ### Users
 Payload auth collection with roles: `admin`, `member`.
 - Only admins can create, update, or delete users.
-- Members can edit Productions, Runs, Media, Props, and Site Settings, but cannot
-  manage users.
+- Members can edit Events, Media, and Site Settings, but cannot manage users.
 - No public registration.
 - Login lockout via `maxLoginAttempts` and `lockTime`.
 - The first admin user is seeded from environment variables (or Payload's first-user
@@ -101,23 +112,29 @@ Publicly readable singleton, sidebar label "Site Settings":
 - `aboutImage` (optional upload -> Media)
 - `email` (email)
 - `phone` (text)
-- `whatsappNumber` (text, international format, digits only)
+- `whatsappNumber` (text, international format, digits only) — used by the fallback
 - `locationText` (text)
 - `mapsUrl` (text)
 - `socialLinks` (array): `platform` (select: instagram, facebook, youtube, tiktok,
   x, other), `url` (text, required)
+- `bankTransfer` (group):
+  - `bankName` (text)
+  - `accountName` (text)
+  - `accountNumber` (text)
+  - `branch` (text)
+  - `instructions` (textarea)
 
 ### Access control
-- Public read: Productions, Runs, Media, Site Settings.
-- Never publicly readable: Props, Users.
+- Public read: Events, Media, Site Settings.
+- Never publicly readable: Users.
 - Create/update/delete content: any logged-in user (admin or member).
 - User management: admins only.
 - Admin panel route: `/backstage`. `/admin` returns 404.
 - `robots.txt` disallows `/backstage`.
 - The public site never links to Backstage.
 
-Admin sidebar groups: **Content** (Productions, Runs, Media, Site Settings),
-**Production** (Props), **System** (Users).
+Admin navigation: **Events**, **Media**, **Users**, **Site Settings**, in that order.
+Nothing else.
 
 ## 5. Folder Structure
 ```
@@ -133,8 +150,9 @@ src/
     (payload)/backstage/...   # Payload admin panel
     robots.ts                 # disallow /backstage
   collections/
-    Productions.ts  Runs.ts  Props.ts  Media.ts  Users.ts
-    access.ts
+    Productions.ts          # admin label "Events"; slug stays productions
+    Media.ts  Users.ts
+    access.ts  hooks/slug.ts
   globals/
     SiteSettings.ts
   designs/
@@ -148,10 +166,13 @@ src/
     EventCard.tsx
     SiteHeader.tsx
     SiteFooter.tsx            # reusable themed footer
+    ticketing/                # SeasonBooking, BookingFlow, SeatMap, confirmation, ticket
   lib/
-    payload.ts                # ONLY place that talks to the CMS
+    payload.ts                # ONLY place that talks to the CMS; returns EventView
+    event-view.ts             # EventView types + derived show status/active rules
     types.ts
     format.ts
+    ticketing/                # public contract, mock client, HTTP client
   payload.config.ts
 ```
 Rule: each production design is self-contained in `src/designs/<slug>/` and owns its
@@ -162,14 +183,14 @@ stores content only.
 
 Design resolution in `events/[slug]/page.tsx`:
 ```tsx
-const production = await getProduction(slug)
-if (!production) notFound()
-const design = designs[production.slug] ?? plainDesign
+const event = await getEventView(slug)
+if (!event) notFound()
+const design = designs[event.slug] ?? plainDesign
 const { Page, Shell } = design
 
 return (
-  <Shell production={production} runs={runs}>
-    <Page production={production} runs={runs} />
+  <Shell event={event}>
+    <Page event={event} />
   </Shell>
 )
 ```
@@ -195,23 +216,31 @@ Each custom design defines its own CSS variables on its root element.
 ### Adding a new production
 
 - [ ] Create `src/designs/<slug>/<Name>Design.tsx` and its CSS file.
-- [ ] Export a `Page` for the production content and a `Shell` that renders the root
-      element, CSS variables, fonts, textures, and themed `<SiteFooter />`.
+- [ ] Export a `Page` that receives the normalized `EventView` and a `Shell` that
+      renders the root element, CSS variables, fonts, textures, and themed
+      `<SiteFooter />`.
 - [ ] Optionally export a `Booking` layout; otherwise the shared `DefaultBooking`
       renders inside the design's `Shell`.
 - [ ] Register `{ Page, Shell, Booking? }` in `src/designs/index.ts`. Designs not
       registered fall back to `plainDesign`.
-- [ ] Define the seat-map variables in `Shell`: `--seat-available`,
+- [ ] Use the shared `SeasonBooking` for the show selector and the single booking card;
+      pass the design's existing card markup as a render prop. The card is the only
+      reserve action.
+- [ ] Define the selection variables in `Shell`: `--seat-available`,
       `--seat-selected`, `--seat-held`, `--seat-sold`, `--seat-blocked`,
       `--seat-stroke`, `--seat-label`, `--stage-fill`.
-- [ ] Use `<ReserveButton>` for every Reserve/Book button. Never hard-code a ticket
+- [ ] Use `bookingHref`/`SeasonBooking` for the reserve link. Never hard-code a ticket
       URL or booking route in a design.
-- [ ] Check the production page, booking page, ticket page, and mobile sticky bar at
-      mobile and desktop widths, with `prefers-reduced-motion` enabled.
+- [ ] Check the production page, booking page, confirmation page, ticket page, and
+      mobile sticky bar at mobile and desktop widths, with `prefers-reduced-motion`
+      enabled.
 
 Data fetching in `lib/payload.ts`: use `payload.find` with `depth: 2` so media and
-relations arrive in one query. Export `getProduction(slug)`, `getAllProductions()`,
-`getRunsForProduction(id)`, and `getSiteSettings()`.
+relations arrive in one query. Export `getAllEventViews()`, `getEventView(slug)`, and
+`getSiteSettings()`. `EventView` flattens the event's shows, derives status and ticketing
+active state, and is the ONLY data shape designs consume; designs never import a Run.
+`getAllProductions`/`getRunsForProduction` and the `runs` relationship disappear with the
+Runs collection.
 
 The shared footer reads Site Settings and is styled with neutral fallbacks:
 `--footer-bg` (`#111`), `--footer-text` (`#eee`), `--footer-accent` (`#c9a227`).
@@ -238,20 +267,26 @@ are handled gracefully. Upcoming first.
 **Event page (the sub-site):** a production's registered design renders the page. The
 fallback `PlainDesign` shows every content field:
 1. Hero with title, tagline, credits, and poster or hero image
-2. Show dates: date, time, venue, status, price, seats note, and ticket link
+2. Show dates as a selector: date, time, venue, status, price/tier display, and
+   availability; past shows are dimmed and not selectable, cancelled shows are marked
 3. Synopsis
 4. Cast and crew
 5. Gallery: masonry grid, captions, and a lightbox
 6. Partners
 7. Link back to all events
 
-All runs of a recurring production appear on the same production page, newest run first.
+The event page uses the shared `SeasonBooking` client: the next upcoming show is
+selected by default (or the most recent show with a "season ended" state), selecting a
+show updates the card and `?show=`, and the booking card is the ONLY reserve action.
+Hero CTAs and the mobile sticky bar are "Get tickets" anchors that scroll to the card.
 
 **Booking, confirmation, and ticket pages:** `/events/[slug]/book`,
 `/events/[slug]/book/confirmation`, and `/t/[token]` render inside the production's
 `Shell` so they inherit its palette, fonts, and footer. A design may provide a custom
-`Booking` component; otherwise the shared `DefaultBooking` is used. See
-`TICKETING.md` for the data contract and the mock-backed demo flow.
+`Booking` component; otherwise the shared `DefaultBooking` is used. The event's
+`paymentMode` decides the flow: bank transfer (details, reference, deadline, staff
+marks paid), online (PayHere sandbox), or off (WhatsApp fallback). See `TICKETING.md`
+for the data contract and the mock-backed demo flow.
 
 **About:** full About content from Site Settings (`aboutText`, `aboutImage`).
 
@@ -279,21 +314,25 @@ an "Open in Google Maps" link, social links). No contact form.
 ## 9. Scope for the Demo (build in this order)
 
 ### Step A: Schema and Backstage access
-- Productions: remove `theme`, `layoutKey`, `backstage`, gallery `category`, and
-  `testimonials`; add `presentedBy`, `writtenBy`, `directedBy`, `partners`; make
-  `gallery` an array of `{ image, caption }`.
-- Runs: `venue`, show `price`, `seatsNote`, and the four show statuses.
-- Add the Site Settings global.
-- Public read on Productions, Runs, Media, Site Settings; never on Props or Users.
+- Events collection (slug `productions`): Details, Shows & tickets, People, Gallery
+  tabs as described in section 4; remove Runs and Props entirely.
+- Remove manual ticketing fields (`ticketingEnabled`, `seatPlanKey`, `ticketUrl`,
+  `price` text, `seatsNote`, manual status). Ticketing state is derived.
+- Add the Site Settings global, including the `bankTransfer` group.
+- Public read on Events, Media, Site Settings; never on Users.
 - Move the admin panel to `/backstage`, title suffix " - Backstage", add `robots.txt`.
 - Users roles `admin`/`member`, admin-only user management, login lockout.
-- Remove all public links to Backstage.
+- Backstage navigation: Events, Media, Users, Site Settings. Remove all public links
+  to Backstage.
 
 ### Step B: Seed content
 - Run all seeders with `npm run seed` (admin users, Site Settings, Dear Daughter).
-- Seed "Dear Daughter," with credits, lorem ipsum synopsis, 4 cast, 3 crew, one run
-  and placeholder show, WhatsApp ticket URL, partners, and 8 captioned gallery images.
-- Seed Site Settings with placeholder contact and social values.
+- Seed "Dear Daughter," with credits, lorem ipsum synopsis, 4 cast, 3 crew, three
+  clearly-marked placeholder future show dates, venue "The Black Bean Cafe, Kandy",
+  one "General" tier at Rs. 2500 × 50, quantity mode, stage front, bank transfer,
+  partners, and 8 captioned gallery images.
+- Add a fictional dev-only event on `PlainDesign` if none exists.
+- Seed Site Settings with placeholder contact, social, and bank-transfer values.
 - Re-runnable without duplicates; print reminders for placeholder values.
 - Generate placeholder artwork locally. Do not download anything.
 
@@ -308,9 +347,10 @@ an "Open in Google Maps" link, social links). No contact form.
 
 ### Step D: Dear Daughter design
 - Self-contained folder with its own CSS and the palette/fonts from section 8.
-- Hero with wallpaper and partner strip; cream section with torn edge, show details,
-  and booking block; wood divider; synopsis, cast/crew, gallery with captions and
-  lightbox; mobile sticky Reserve bar.
+- Hero with wallpaper and partner strip; cream section with torn edge, show selector,
+  and booking card; wood divider; synopsis, cast/crew, gallery with captions and
+  lightbox; mobile sticky **Get tickets** bar.
+- The show-dates list is the selector and the booking card is the only reserve action.
 - Respect `prefers-reduced-motion`.
 - Texture files are supplied later by the user; the design must fall back gracefully.
 
@@ -324,7 +364,8 @@ design prints the partner name as text.
 
 ## 10. Out of Scope (do not build now)
 - User accounts for the public
-- Prop dashboard styling beyond the default Backstage UI
+- Prop tracking (the Props collection is removed)
+- Seat-plan templates, a seat-plan builder, or plan keys
 - SEO polish and analytics
 
 Ticketing (payments, QR tickets, the Go service) has its own spec in
@@ -337,8 +378,12 @@ Ticketing (payments, QR tickets, the Go service) has its own spec in
 
 ## 12. Conventions
 - TypeScript strict mode; shared types in `src/lib/types.ts`.
-- Server components by default; client components only for lightbox/animation.
+- Server components by default; client components only for lightbox/animation and the
+  booking flow.
 - Keep each production design self-contained in `src/designs/<slug>/`.
+- Designs consume only the normalized `EventView`; derive statuses instead of storing
+  them.
+- Keep one booking card per event and one reserve link source (`bookingHref`).
 - Backstage holds content only: no colors, fonts, or layout keys in Payload.
 - "Backstage" means the admin panel only. Never use it for photos, gallery categories,
   or public sections. Do not add testimonials.
