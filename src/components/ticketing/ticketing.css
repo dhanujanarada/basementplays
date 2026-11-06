@@ -1,0 +1,624 @@
+/*
+ * Shared ticketing UI. Themed only through CSS variables so each production
+ * Shell controls the look. Every variable has a neutral fallback.
+ */
+
+.plain-shell {
+  --seat-available: #26262b;
+  --seat-selected: #c9a227;
+  --seat-selected-label: #141416;
+  --seat-held: #3b3b42;
+  --seat-sold: #1a1a1e;
+  --seat-blocked: #111114;
+  --seat-stroke: #4a4a52;
+  --seat-label: #f2efe9;
+  --stage-fill: #2a2a30;
+}
+
+.tk {
+  padding-block: clamp(2.5rem, 6vw, 5rem);
+}
+
+.tk-booking-header {
+  background: var(--surface-raised, #1d1d21);
+  border-bottom: 1px solid var(--border, #2c2c31);
+  padding-block: clamp(2rem, 4vw, 3.5rem);
+}
+
+.tk-eyebrow {
+  color: var(--accent);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+.tk-booking-header h1 {
+  font-family: var(--font-display);
+  font-size: clamp(1.9rem, 4vw, 3rem);
+  line-height: 1.1;
+  margin: 0.4rem 0 0.75rem;
+}
+
+.tk-booking-header p {
+  color: var(--muted);
+  margin: 0;
+}
+
+.tk-layout {
+  align-items: start;
+  display: grid;
+  gap: clamp(1.5rem, 3vw, 2.5rem);
+  grid-template-columns: minmax(0, 1fr);
+}
+
+@media (min-width: 900px) {
+  .tk-layout {
+    grid-template-columns: minmax(0, 1fr) 20rem;
+  }
+}
+
+.tk-panel {
+  background: var(--surface, #151518);
+  border: 1px solid var(--border, #2c2c31);
+  border-radius: 1rem;
+  padding: clamp(1rem, 2.5vw, 1.75rem);
+}
+
+.tk-panel + .tk-panel {
+  margin-top: 1.25rem;
+}
+
+.tk-panel h2,
+.tk-panel h3 {
+  font-family: var(--font-display);
+  line-height: 1.2;
+  margin: 0 0 0.75rem;
+}
+
+.tk-panel h2 {
+  font-size: clamp(1.35rem, 2.5vw, 1.8rem);
+}
+
+.tk-panel h3 {
+  font-size: 1.15rem;
+}
+
+.tk-stage {
+  background: var(--stage-fill, #2a2a30);
+  border-radius: 999px;
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  margin: 0 auto 1.75rem;
+  max-width: 18rem;
+  padding: 0.55rem 1rem;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.tk-tier + .tk-tier {
+  margin-top: 1.75rem;
+}
+
+.tk-tier-head {
+  align-items: baseline;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.75rem;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
+.tk-tier-head h3 {
+  margin: 0;
+}
+
+.tk-tier-meta {
+  color: var(--muted, #a39f97);
+  font-size: 0.82rem;
+}
+
+.tk-seat-scroll {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 0.4rem;
+  scrollbar-width: thin;
+}
+
+.tk-seat-grid {
+  display: grid;
+  gap: 0.4rem;
+  grid-template-columns: repeat(var(--tk-columns, 10), minmax(2rem, 1fr));
+}
+
+.tk-seat {
+  aspect-ratio: 1;
+  align-items: center;
+  background: var(--seat-available, #26262b);
+  border: 1px solid var(--seat-stroke, #4a4a52);
+  border-radius: 0.35rem;
+  color: var(--seat-label, #f2efe9);
+  cursor: pointer;
+  display: inline-flex;
+  font-family: inherit;
+  font-size: 0.64rem;
+  font-weight: 600;
+  justify-content: center;
+  min-height: 32px;
+  min-width: 32px;
+  padding: 0;
+  position: relative;
+  transition:
+    transform 120ms ease,
+    background 120ms ease,
+    border-color 120ms ease;
+}
+
+.tk-seat.is-selected::after {
+  content: '✓';
+  font-size: 0.55rem;
+  line-height: 1;
+  position: absolute;
+  right: 0.1rem;
+  top: 0.1rem;
+}
+
+.tk-seat:hover:not(:disabled) {
+  border-color: var(--seat-selected, #c9a227);
+  transform: translateY(-1px);
+}
+
+.tk-seat:focus-visible {
+  outline: 2px solid var(--seat-selected, #c9a227);
+  outline-offset: 2px;
+}
+
+.tk-seat.is-selected {
+  background: var(--seat-selected, #c9a227);
+  border-color: var(--seat-selected, #c9a227);
+  color: var(--seat-selected-label, #141416);
+}
+
+.tk-seat.is-held,
+.tk-seat.is-sold,
+.tk-seat.is-blocked {
+  cursor: not-allowed;
+}
+
+.tk-seat.is-held {
+  background:
+    repeating-linear-gradient(
+      45deg,
+      transparent 0 4px,
+      color-mix(in srgb, var(--seat-held, #3b3b42) 70%, #000) 4px 7px
+    ),
+    var(--seat-held, #3b3b42);
+  color: color-mix(in srgb, var(--seat-label, #f2efe9) 55%, transparent);
+}
+
+.tk-seat.is-sold {
+  background:
+    repeating-linear-gradient(
+      45deg,
+      transparent 0 4px,
+      color-mix(in srgb, var(--seat-sold, #1a1a1e) 70%, #000) 4px 7px
+    ),
+    var(--seat-sold, #1a1a1e);
+  color: color-mix(in srgb, var(--seat-label, #f2efe9) 40%, transparent);
+}
+
+.tk-seat.is-blocked {
+  background:
+    repeating-linear-gradient(
+      135deg,
+      transparent 0 4px,
+      color-mix(in srgb, var(--seat-blocked, #111114) 75%, #000) 4px 7px
+    ),
+    var(--seat-blocked, #111114);
+  color: transparent;
+}
+
+.tk-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  list-style: none;
+  margin: 1.5rem 0 0;
+  padding: 0;
+}
+
+.tk-legend li {
+  align-items: center;
+  color: var(--muted, #a39f97);
+  display: inline-flex;
+  font-size: 0.75rem;
+  gap: 0.4rem;
+}
+
+.tk-swatch {
+  border: 1px solid var(--seat-stroke, #4a4a52);
+  border-radius: 0.2rem;
+  display: inline-block;
+  height: 0.85rem;
+  width: 0.85rem;
+}
+
+.tk-swatch--available {
+  background: var(--seat-available, #26262b);
+}
+
+.tk-swatch--selected {
+  background: var(--seat-selected, #c9a227);
+}
+
+.tk-swatch--held {
+  background:
+    repeating-linear-gradient(
+      45deg,
+      transparent 0 3px,
+      color-mix(in srgb, var(--seat-held, #3b3b42) 70%, #000) 3px 5px
+    ),
+    var(--seat-held, #3b3b42);
+}
+
+.tk-swatch--sold {
+  background:
+    repeating-linear-gradient(
+      45deg,
+      transparent 0 3px,
+      color-mix(in srgb, var(--seat-sold, #1a1a1e) 70%, #000) 3px 5px
+    ),
+    var(--seat-sold, #1a1a1e);
+}
+
+.tk-summary {
+  position: sticky;
+  top: 1.25rem;
+}
+
+.tk-summary-list {
+  border-top: 1px solid var(--border, #2c2c31);
+  list-style: none;
+  margin: 0 0 1rem;
+  padding: 0.75rem 0 0;
+}
+
+.tk-summary-list li {
+  align-items: baseline;
+  display: flex;
+  gap: 0.75rem;
+  justify-content: space-between;
+  padding-block: 0.3rem;
+}
+
+.tk-summary-list span:last-child {
+  color: var(--muted, #a39f97);
+  font-variant-numeric: tabular-nums;
+}
+
+.tk-total {
+  align-items: baseline;
+  border-top: 1px solid var(--border, #2c2c31);
+  display: flex;
+  font-size: 1.05rem;
+  gap: 1rem;
+  justify-content: space-between;
+  padding-top: 0.8rem;
+}
+
+.tk-muted {
+  color: var(--muted, #a39f97);
+  font-size: 0.86rem;
+}
+
+.tk-notice {
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 55%, transparent);
+  border-radius: 0.6rem;
+  color: var(--text);
+  font-size: 0.88rem;
+  margin-bottom: 1rem;
+  padding: 0.7rem 0.85rem;
+}
+
+.tk-countdown {
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
+  border-radius: 0.6rem;
+  font-size: 0.86rem;
+  margin-bottom: 1rem;
+  padding: 0.65rem 0.8rem;
+}
+
+.tk-countdown strong {
+  font-variant-numeric: tabular-nums;
+}
+
+.tk-field {
+  display: block;
+  margin-bottom: 0.9rem;
+}
+
+.tk-field span {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  margin-bottom: 0.35rem;
+  text-transform: uppercase;
+}
+
+.tk-field input,
+.tk-field select {
+  background: var(--bg, #0d0d0f);
+  border: 1px solid var(--border, #2c2c31);
+  border-radius: 0.55rem;
+  color: var(--text, #f2efe9);
+  font-family: inherit;
+  font-size: 0.95rem;
+  min-height: 2.75rem;
+  padding: 0.6rem 0.75rem;
+  width: 100%;
+}
+
+.tk-field input:focus,
+.tk-field select:focus {
+  border-color: var(--accent);
+  outline: 2px solid color-mix(in srgb, var(--accent) 35%, transparent);
+  outline-offset: 1px;
+}
+
+.tk-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: 1rem;
+}
+
+.tk-button {
+  align-items: center;
+  background: var(--accent, #c9a227);
+  border: 1px solid var(--accent, #c9a227);
+  border-radius: 999px;
+  color: var(--bg, #0d0d0f);
+  cursor: pointer;
+  display: inline-flex;
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  gap: 0.45rem;
+  justify-content: center;
+  min-height: 2.75rem;
+  padding: 0.65rem 1.3rem;
+  transition: opacity 120ms ease;
+}
+
+.tk-button:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.tk-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.tk-button--secondary {
+  background: transparent;
+  border-color: var(--border, #2c2c31);
+  color: var(--text, #f2efe9);
+}
+
+.tk-button--link {
+  background: none;
+  border: 0;
+  color: var(--muted, #a39f97);
+  min-height: auto;
+  padding: 0.25rem;
+  text-decoration: underline;
+}
+
+.tk-error {
+  color: #fca5a5;
+  font-size: 0.86rem;
+  margin: 0.5rem 0 0;
+}
+
+.tk-badge {
+  border: 1px solid var(--border, #2c2c31);
+  border-radius: 999px;
+  display: inline-flex;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  padding: 0.25rem 0.6rem;
+  text-transform: uppercase;
+}
+
+.tk-badge--ok {
+  border-color: #4ade80;
+  color: #22c55e;
+}
+
+.tk-badge--warn {
+  border-color: var(--accent, #c9a227);
+  color: var(--accent, #c9a227);
+}
+
+.tk-ticket {
+  display: grid;
+  gap: clamp(1.25rem, 3vw, 2rem);
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.tk-details {
+  display: grid;
+  gap: 0.6rem 1.25rem;
+  grid-template-columns: max-content minmax(0, 1fr);
+  margin: 1.25rem 0;
+}
+
+.tk-details dt {
+  color: var(--muted, #a39f97);
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.tk-details dd {
+  margin: 0;
+}
+
+@media (min-width: 760px) {
+  .tk-ticket {
+    grid-template-columns: minmax(0, 1fr) 15rem;
+  }
+}
+
+.tk-qr {
+  align-self: start;
+  background: #fff;
+  border-radius: 0.75rem;
+  padding: 0.85rem;
+  text-align: center;
+}
+
+.tk-qr svg {
+  display: block;
+  height: auto;
+  max-width: 100%;
+  width: 100%;
+}
+
+.tk-qr p {
+  color: #3f3a33;
+  font-size: 0.7rem;
+  margin: 0.65rem 0 0;
+  word-break: break-all;
+}
+
+.tk-picker {
+  display: grid;
+  gap: 0.75rem;
+  list-style: none;
+  margin: 1rem 0 0;
+  padding: 0;
+}
+
+.tk-picker a {
+  align-items: center;
+  background: var(--surface, #151518);
+  border: 1px solid var(--border, #2c2c31);
+  border-radius: 0.75rem;
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+  padding: 1rem 1.15rem;
+  transition: border-color 120ms ease;
+}
+
+.tk-picker a:hover {
+  border-color: var(--accent);
+}
+
+.tk-picker strong {
+  display: block;
+  font-weight: 600;
+}
+
+.tk-picker span {
+  color: var(--muted, #a39f97);
+  font-size: 0.85rem;
+}
+
+/* Dear Daughter overrides */
+.dd-page {
+  --seat-available: #fbf6e9;
+  --seat-selected: var(--accent);
+  --seat-selected-label: var(--paper);
+  --seat-held: color-mix(in srgb, var(--accent) 26%, var(--paper));
+  --seat-sold: color-mix(in srgb, var(--ink) 14%, var(--paper));
+  --seat-blocked: color-mix(in srgb, var(--ink) 26%, var(--paper));
+  --seat-stroke: var(--wood);
+  --seat-label: var(--ink);
+  --stage-fill: var(--wood);
+}
+
+.dd-page .tk-booking-header {
+  background:
+    linear-gradient(
+      color-mix(in srgb, var(--bg-deep) 92%, transparent),
+      color-mix(in srgb, var(--bg-deep) 96%, transparent)
+    ),
+    url('/textures/damask.png') center / 18rem auto repeat,
+    var(--bg-deep);
+  color: var(--paper);
+}
+
+.dd-page .tk-booking-header p {
+  color: color-mix(in srgb, var(--paper) 78%, transparent);
+}
+
+.dd-page .tk-eyebrow {
+  color: var(--gold);
+}
+
+.dd-page .tk-panel {
+  background: var(--paper);
+  border-color: var(--line);
+  box-shadow: 0 18px 40px -32px var(--shadow);
+}
+
+.dd-page .tk-panel h2,
+.dd-page .tk-panel h3 {
+  color: var(--ink);
+}
+
+.dd-page .tk-button {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--paper);
+}
+
+.dd-page .tk-button--secondary {
+  background: transparent;
+  border-color: var(--line-strong);
+  color: var(--ink);
+}
+
+.dd-page .tk-button--link {
+  color: var(--ink-soft);
+}
+
+.dd-page .tk-field input,
+.dd-page .tk-field select {
+  background: #fffdf7;
+  border-color: var(--line-strong);
+  color: var(--ink);
+}
+
+.dd-page .tk-notice {
+  color: var(--ink);
+}
+
+.dd-page .tk-error {
+  color: var(--accent-deep);
+}
+
+.dd-page .tk-qr {
+  background: #fffdf7;
+}
+
+.dd-page .tk-picker a {
+  background: var(--paper-deep);
+  border-color: var(--line);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tk-seat,
+  .tk-button,
+  .tk-picker a {
+    transition: none;
+  }
+}

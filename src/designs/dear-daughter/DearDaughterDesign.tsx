@@ -5,6 +5,7 @@ import Link from 'next/link'
 
 import { Gallery, type GalleryImage } from '@/components/Gallery'
 import { SiteFooter } from '@/components/SiteFooter'
+import { ReserveButton } from '@/components/ticketing/ReserveButton'
 import { Button } from '@/components/ui/Button'
 import { Container } from '@/components/ui/Container'
 import {
@@ -19,7 +20,11 @@ import {
   sortRunsNewestFirst,
   sortShowsAscending,
 } from '@/lib/shows'
-import type { ProductionDesignProps } from '@/lib/types'
+import { bookingHref, isBookableShow } from '@/lib/ticketing/booking'
+import type {
+  ProductionDesignProps,
+  ProductionShellProps,
+} from '@/lib/types'
 
 import './dear-daughter.css'
 
@@ -90,7 +95,7 @@ function initials(name: string): string {
     .toUpperCase()
 }
 
-export function DearDaughterDesign({
+export function DearDaughterPage({
   production,
   runs,
 }: ProductionDesignProps) {
@@ -116,20 +121,10 @@ export function DearDaughterDesign({
     { label: 'Directed by', value: production.directedBy },
   ].filter((credit) => Boolean(credit.value))
 
-  const canBookNext =
-    Boolean(nextShow?.show.ticketUrl) &&
-    nextShow?.show.status !== 'sold-out' &&
-    nextShow?.show.status !== 'cancelled'
-  const nextTicketUrl = canBookNext ? (nextShow?.show.ticketUrl ?? null) : null
-  const heroCtaHref = nextTicketUrl ?? '#show-dates'
-  const heroCtaLabel = nextTicketUrl ? 'Reserve seats' : 'See show dates'
+  const nextTicketHref = bookingHref(production, nextShow?.show)
 
   return (
-    <article
-      className={`dd-page ${displayFont.variable} ${bodyFont.variable}${
-        nextTicketUrl ? ' dd-page--has-bar' : ''
-      }`}
-    >
+    <>
       <header className="dd-hero">
         {hero ? (
           <Image
@@ -173,15 +168,18 @@ export function DearDaughterDesign({
             ) : null}
 
             <div className="dd-hero__actions">
-              <Button
-                className="dd-cta"
-                href={heroCtaHref}
-                {...(nextTicketUrl
-                  ? { rel: 'noreferrer', target: '_blank' }
-                  : {})}
-              >
-                {heroCtaLabel}
-              </Button>
+              {nextTicketHref ? (
+                <ReserveButton
+                  className="dd-cta"
+                  label="Reserve seats"
+                  production={production}
+                  show={nextShow?.show}
+                />
+              ) : (
+                <Button className="dd-cta" href="#show-dates">
+                  See show dates
+                </Button>
+              )}
               <a className="dd-text-link" href="#show-dates">
                 Show dates
               </a>
@@ -295,10 +293,7 @@ export function DearDaughterDesign({
                         <ul className="dd-shows">
                           {shows.map((show, index) => {
                             const parts = dateParts(show.startsAt)
-                            const canBook =
-                              Boolean(show.ticketUrl) &&
-                              show.status !== 'sold-out' &&
-                              show.status !== 'cancelled'
+                            const canBook = isBookableShow(show)
                             const meta = [show.price, show.seatsNote]
                               .filter(Boolean)
                               .join(' · ')
@@ -337,15 +332,13 @@ export function DearDaughterDesign({
                                     {formatStatus(show.status)}
                                   </span>
                                   {canBook ? (
-                                    <Button
+                                    <ReserveButton
                                       className="dd-ticket-button"
-                                      href={show.ticketUrl ?? '#'}
-                                      rel="noreferrer"
-                                      target="_blank"
+                                      label="Reserve"
+                                      production={production}
+                                      show={show}
                                       variant="secondary"
-                                    >
-                                      Reserve
-                                    </Button>
+                                    />
                                   ) : null}
                                 </div>
                               </li>
@@ -401,15 +394,13 @@ export function DearDaughterDesign({
                   ) : null}
                 </dl>
 
-                {nextTicketUrl ? (
-                  <Button
+                {nextTicketHref ? (
+                  <ReserveButton
                     className="dd-cta dd-booking__button"
-                    href={nextTicketUrl}
-                    rel="noreferrer"
-                    target="_blank"
-                  >
-                    Reserve seats
-                  </Button>
+                    label="Reserve seats"
+                    production={production}
+                    show={nextShow.show}
+                  />
                 ) : (
                   <p className="dd-booking__note">
                     This performance is{' '}
@@ -555,7 +546,7 @@ export function DearDaughterDesign({
         </Container>
       </section>
 
-      {nextTicketUrl && nextShow ? (
+      {nextTicketHref && nextShow ? (
         <div className="dd-sticky-bar">
           <div className="dd-sticky-bar__copy">
             <span className="dd-sticky-bar__label">Next show</span>
@@ -563,17 +554,32 @@ export function DearDaughterDesign({
               {formatShowDate(nextShow.show.startsAt)}
             </span>
           </div>
-          <Button
+          <ReserveButton
             className="dd-cta dd-cta--small"
-            href={nextTicketUrl}
-            rel="noreferrer"
-            target="_blank"
-          >
-            Reserve
-          </Button>
+            label="Reserve"
+            production={production}
+            show={nextShow.show}
+          />
         </div>
       ) : null}
+    </>
+  )
+}
 
+export function DearDaughterShell({
+  children,
+  runs,
+}: ProductionShellProps) {
+  const nextShow = getUpcomingShow(runs)
+  const hasBar = isBookableShow(nextShow?.show)
+
+  return (
+    <article
+      className={`dd-page ${displayFont.variable} ${bodyFont.variable}${
+        hasBar ? ' dd-page--has-bar' : ''
+      }`}
+    >
+      {children}
       <SiteFooter />
     </article>
   )

@@ -14,7 +14,10 @@ type FooterGateProps = {
  */
 export function FooterGate({ children }: FooterGateProps) {
   const pathname = usePathname()
-  const isProductionPage = /^\/events\/[^/]+$/.test(pathname)
+  const isProductionPage =
+    /^\/events\/[^/]+$/.test(pathname) ||
+    /^\/events\/[^/]+\/book(?:\/confirmation)?$/.test(pathname) ||
+    /^\/t\/[^/]+$/.test(pathname)
 
   if (isProductionPage) {
     return null

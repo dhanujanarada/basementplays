@@ -138,10 +138,10 @@ src/
   globals/
     SiteSettings.ts
   designs/
-    index.ts                  # registry: production slug -> design component
-    PlainDesign.tsx           # neutral fallback, shows all content
+    index.ts                  # registry: production slug -> { Page, Shell, Booking? }
+    PlainDesign.tsx           # neutral fallback (PlainPage + PlainShell)
     dear-daughter/
-      DearDaughterDesign.tsx  # self-contained production design
+      DearDaughterDesign.tsx  # DearDaughterPage + DearDaughterShell
       dear-daughter.css       # design-owned colors and styles
   components/
     ui/                       # Button, Badge, Container
@@ -164,19 +164,50 @@ Design resolution in `events/[slug]/page.tsx`:
 ```tsx
 const production = await getProduction(slug)
 if (!production) notFound()
-const Design = designs[production.slug] ?? PlainDesign
-return <Design production={production} runs={runs} />
+const design = designs[production.slug] ?? plainDesign
+const { Page, Shell } = design
+
+return (
+  <Shell production={production} runs={runs}>
+    <Page production={production} runs={runs} />
+  </Shell>
+)
 ```
 
 Registry in `designs/index.ts`:
 ```ts
-export const designs = {
-  'dear-daughter': DearDaughterDesign,
+export const designs: Partial<Record<string, ProductionDesign>> = {
+  'dear-daughter': {
+    Page: DearDaughterPage,
+    Shell: DearDaughterShell,
+  },
+}
+
+export const plainDesign: ProductionDesign = {
+  Page: PlainPage,
+  Shell: PlainShell,
 }
 ```
 
-Colors, fonts, and layout live in the design component and its CSS, not in Payload.
+Colors, fonts, and layout live in the design's `Shell` and its CSS, not in Payload.
 Each custom design defines its own CSS variables on its root element.
+
+### Adding a new production
+
+- [ ] Create `src/designs/<slug>/<Name>Design.tsx` and its CSS file.
+- [ ] Export a `Page` for the production content and a `Shell` that renders the root
+      element, CSS variables, fonts, textures, and themed `<SiteFooter />`.
+- [ ] Optionally export a `Booking` layout; otherwise the shared `DefaultBooking`
+      renders inside the design's `Shell`.
+- [ ] Register `{ Page, Shell, Booking? }` in `src/designs/index.ts`. Designs not
+      registered fall back to `plainDesign`.
+- [ ] Define the seat-map variables in `Shell`: `--seat-available`,
+      `--seat-selected`, `--seat-held`, `--seat-sold`, `--seat-blocked`,
+      `--seat-stroke`, `--seat-label`, `--stage-fill`.
+- [ ] Use `<ReserveButton>` for every Reserve/Book button. Never hard-code a ticket
+      URL or booking route in a design.
+- [ ] Check the production page, booking page, ticket page, and mobile sticky bar at
+      mobile and desktop widths, with `prefers-reduced-motion` enabled.
 
 Data fetching in `lib/payload.ts`: use `payload.find` with `depth: 2` so media and
 relations arrive in one query. Export `getProduction(slug)`, `getAllProductions()`,
@@ -187,11 +218,13 @@ The shared footer reads Site Settings and is styled with neutral fallbacks:
 Production designs may override those variables on their root element.
 
 Footer placement: the frontend layout renders `<SiteFooter />` for every page, but
-`FooterGate` (a client component that checks `usePathname`) suppresses it on
-`/events/[slug]`. Each production design renders `<SiteFooter />` inside its own root
-element instead, so the design's CSS variables theme the footer. This keeps exactly
-one footer per page. Header and footer both read Site Settings (`groupName`, contact
-details, social links) so content stays in Backstage.
+`FooterGate` (a client component that checks `usePathname`) suppresses it on the
+production page (`/events/[slug]`), the booking and confirmation routes, and the
+ticket page (`/t/[token]`). Each of those routes renders inside the production's
+`Shell`, which includes `<SiteFooter />` inside its own root element, so the
+design's CSS variables theme the footer. This keeps exactly one footer per page.
+Header and footer both read Site Settings (`groupName`, contact details, social
+links) so content stays in Backstage.
 
 ## 7. Pages
 
@@ -213,6 +246,12 @@ fallback `PlainDesign` shows every content field:
 7. Link back to all events
 
 All runs of a recurring production appear on the same production page, newest run first.
+
+**Booking, confirmation, and ticket pages:** `/events/[slug]/book`,
+`/events/[slug]/book/confirmation`, and `/t/[token]` render inside the production's
+`Shell` so they inherit its palette, fonts, and footer. A design may provide a custom
+`Booking` component; otherwise the shared `DefaultBooking` is used. See
+`TICKETING.md` for the data contract and the mock-backed demo flow.
 
 **About:** full About content from Site Settings (`aboutText`, `aboutImage`).
 
@@ -284,17 +323,16 @@ Partner logos are uploaded per partner in Backstage; when a partner has no logo 
 design prints the partner name as text.
 
 ## 10. Out of Scope (do not build now)
-- Payments / checkout
 - User accounts for the public
 - Prop dashboard styling beyond the default Backstage UI
-- Email, ticket QR codes, or booking logic
 - SEO polish and analytics
 
+Ticketing (payments, QR tickets, the Go service) has its own spec in
+`TICKETING.md`. The public booking flow currently runs against an in-browser mock.
+
 ## 11. Future Work (design so these are easy to add later)
+- Real PayHere integration and the Go ticketing service (`TICKETING.md`).
 - Archive page for past productions.
-- Payment gateway (likely PayHere for Sri Lanka; verify availability). Add a `Bookings`
-  collection with status pending/paid; the gateway webhook marks it paid.
-- Link "Book tickets" buttons to the booking flow instead of an external `ticketUrl`.
 - Move SQLite to Postgres and deploy.
 
 ## 12. Conventions

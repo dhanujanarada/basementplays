@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { cache } from 'react'
 
-import { PlainDesign, designs } from '@/designs'
+import { designs, plainDesign } from '@/designs'
 import { getProduction, getRunsForProduction } from '@/lib/payload'
 
 export const dynamic = 'force-dynamic'
@@ -40,7 +40,12 @@ export default async function EventPage({ params }: EventPageProps) {
   }
 
   const runs = await getRunsForProduction(production.id)
-  const Design = designs[production.slug] ?? PlainDesign
+  const design = designs[production.slug] ?? plainDesign
+  const { Page, Shell } = design
 
-  return <Design production={production} runs={runs} />
+  return (
+    <Shell production={production} runs={runs}>
+      <Page production={production} runs={runs} />
+    </Shell>
+  )
 }

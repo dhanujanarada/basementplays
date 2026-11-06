@@ -45,6 +45,10 @@ payload.db
 payload.db-*
 /media
 
+# ticketing service
+/ticketing/bin/
+/ticketing/coverage.out
+
 # Playwright
 node_modules/
 /test-results/

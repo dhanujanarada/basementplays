@@ -50,6 +50,10 @@ export const Runs: CollectionConfig = {
           type: 'select',
           required: true,
           defaultValue: 'open',
+          admin: {
+            description:
+              'Manual status. While ticketing is enabled, availability comes from the ticketing service; use this only to force sold out or cancelled.',
+          },
           options: [
             {
               label: 'Open',
@@ -70,19 +74,30 @@ export const Runs: CollectionConfig = {
           ],
         },
         {
+          name: 'ticketingEnabled',
+          type: 'checkbox',
+          defaultValue: false,
+          admin: {
+            description:
+              'Use the ticketing service for this show. Prices, status, and seats remaining then come from its seat plan; the price and seats note below are ignored.',
+          },
+        },
+        {
           name: 'price',
           type: 'text',
           required: true,
           defaultValue: '',
           admin: {
-            description: 'e.g. Rs. 2500',
+            description:
+              'e.g. Rs. 2500. Ignored while ticketing is enabled.',
           },
         },
         {
           name: 'seatsNote',
           type: 'text',
           admin: {
-            description: 'Optional. e.g. Less than 20 seats left',
+            description:
+              'Optional. e.g. Less than 20 seats left. Ignored while ticketing is enabled.',
           },
         },
         {

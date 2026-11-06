@@ -1,15 +1,22 @@
-import type { ComponentType } from 'react'
+import type { ProductionDesign } from '@/lib/types'
 
-import type { ProductionDesignProps } from '@/lib/types'
+import {
+  DearDaughterPage,
+  DearDaughterShell,
+} from './dear-daughter/DearDaughterDesign'
+import { PlainPage, PlainShell } from './PlainDesign'
 
-import { DearDaughterDesign } from './dear-daughter/DearDaughterDesign'
-import { PlainDesign } from './PlainDesign'
-
-// Register custom production designs here by slug as they are built.
-export const designs: Partial<
-  Record<string, ComponentType<ProductionDesignProps>>
-> = {
-  'dear-daughter': DearDaughterDesign,
+// Register custom production designs here by slug as they are built. A design
+// provides its page content, the shared theme shell, and optionally a custom
+// booking layout.
+export const designs: Partial<Record<string, ProductionDesign>> = {
+  'dear-daughter': {
+    Page: DearDaughterPage,
+    Shell: DearDaughterShell,
+  },
 }
 
-export { PlainDesign }
+export const plainDesign: ProductionDesign = {
+  Page: PlainPage,
+  Shell: PlainShell,
+}

@@ -288,13 +288,20 @@ export interface Run {
   shows?:
     | {
         startsAt: string;
+        /**
+         * Manual status. While ticketing is enabled, availability comes from the ticketing service; use this only to force sold out or cancelled.
+         */
         status: 'open' | 'few-left' | 'sold-out' | 'cancelled';
         /**
-         * e.g. Rs. 2500
+         * Use the ticketing service for this show. Prices, status, and seats remaining then come from its seat plan; the price and seats note below are ignored.
+         */
+        ticketingEnabled?: boolean | null;
+        /**
+         * e.g. Rs. 2500. Ignored while ticketing is enabled.
          */
         price: string;
         /**
-         * Optional. e.g. Less than 20 seats left
+         * Optional. e.g. Less than 20 seats left. Ignored while ticketing is enabled.
          */
         seatsNote?: string | null;
         ticketUrl?: string | null;
@@ -541,6 +548,7 @@ export interface RunsSelect<T extends boolean = true> {
     | {
         startsAt?: T;
         status?: T;
+        ticketingEnabled?: T;
         price?: T;
         seatsNote?: T;
         ticketUrl?: T;

@@ -4,6 +4,7 @@ import Link from 'next/link'
 
 import { Gallery, type GalleryImage } from '@/components/Gallery'
 import { SiteFooter } from '@/components/SiteFooter'
+import { ReserveButton } from '@/components/ticketing/ReserveButton'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { Container } from '@/components/ui/Container'
@@ -14,9 +15,13 @@ import {
 } from '@/lib/format'
 import { mediaImage } from '@/lib/media'
 import { getUpcomingShow, sortRunsNewestFirst, sortShowsAscending } from '@/lib/shows'
-import type { ProductionDesignProps } from '@/lib/types'
+import { isBookableShow } from '@/lib/ticketing/booking'
+import type {
+  ProductionDesignProps,
+  ProductionShellProps,
+} from '@/lib/types'
 
-export function PlainDesign({ production, runs }: ProductionDesignProps) {
+export function PlainPage({ production, runs }: ProductionDesignProps) {
   const poster = mediaImage(production.poster, 'full')
   const hero = mediaImage(production.heroImage, 'full')
   const nextShow = getUpcomingShow(runs)
@@ -35,7 +40,7 @@ export function PlainDesign({ production, runs }: ProductionDesignProps) {
   ].filter((credit) => Boolean(credit.value))
 
   return (
-    <article>
+    <>
       <header className="relative isolate overflow-hidden border-b border-[var(--border)]">
         {hero ? (
           <div className="absolute inset-0 -z-20">
@@ -177,10 +182,7 @@ export function PlainDesign({ production, runs }: ProductionDesignProps) {
 
                         <ul className="mt-4 divide-y divide-[var(--border)]">
                           {shows.map((show, index) => {
-                            const canBook =
-                              Boolean(show.ticketUrl) &&
-                              show.status !== 'sold-out' &&
-                              show.status !== 'cancelled'
+                            const canBook = isBookableShow(show)
 
                             return (
                               <li
@@ -208,15 +210,13 @@ export function PlainDesign({ production, runs }: ProductionDesignProps) {
                                     {formatStatus(show.status)}
                                   </Badge>
                                   {canBook ? (
-                                    <Button
+                                    <ReserveButton
                                       className="px-4 py-2 text-xs"
-                                      href={show.ticketUrl ?? '#'}
-                                      rel="noreferrer"
-                                      target="_blank"
+                                      label="Get tickets"
+                                      production={production}
+                                      show={show}
                                       variant="secondary"
-                                    >
-                                      Get tickets
-                                    </Button>
+                                    />
                                   ) : null}
                                 </div>
                               </li>
@@ -415,7 +415,14 @@ export function PlainDesign({ production, runs }: ProductionDesignProps) {
           </Button>
         </Container>
       </section>
+    </>
+  )
+}
 
+export function PlainShell({ children }: ProductionShellProps) {
+  return (
+    <article className="plain-shell">
+      {children}
       <SiteFooter />
     </article>
   )
